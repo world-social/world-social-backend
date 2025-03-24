@@ -1,0 +1,329 @@
+{
+  "info": {
+    "name": "WorldSocial API",
+    "description": "API collection for WorldSocial - A decentralized social media platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"worldId\": \"your-world-id\",\n    \"username\": \"testuser\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Register a new user with World ID verification"
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"worldId\": \"your-world-id\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login user with World ID verification"
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "profile"]
+            },
+            "description": "Get user profile information"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Content",
+      "item": [
+        {
+          "name": "Upload Video",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "video",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "title",
+                  "value": "My Video Title",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Video description",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/content/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "content", "upload"]
+            },
+            "description": "Upload a new video"
+          }
+        },
+        {
+          "name": "Get Video Feed",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/content/feed?cursor={{cursor}}&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "content", "feed"],
+              "query": [
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get paginated video feed"
+          }
+        },
+        {
+          "name": "Stream Video",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/content/{{videoId}}/stream",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "content", "{{videoId}}", "stream"]
+            },
+            "description": "Stream a video"
+          }
+        },
+        {
+          "name": "Like Video",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/content/{{videoId}}/like",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "content", "{{videoId}}", "like"]
+            },
+            "description": "Like a video"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tokens",
+      "item": [
+        {
+          "name": "Get Balance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens/balance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens", "balance"]
+            },
+            "description": "Get user token balance"
+          }
+        },
+        {
+          "name": "Get Transaction History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens", "transactions"]
+            },
+            "description": "Get user transaction history"
+          }
+        },
+        {
+          "name": "Withdraw Earnings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens/withdraw",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens", "withdraw"]
+            },
+            "description": "Withdraw earnings (Influencers only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gamification",
+      "item": [
+        {
+          "name": "Get Streak",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/gamification/streak",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "gamification", "streak"]
+            },
+            "description": "Get user streak information"
+          }
+        },
+        {
+          "name": "Get Badges",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/gamification/badges",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "gamification", "badges"]
+            },
+            "description": "Get user badges"
+          }
+        },
+        {
+          "name": "Get Leaderboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/gamification/leaderboard?type=streak",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "gamification", "leaderboard"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "streak"
+                }
+              ]
+            },
+            "description": "Get leaderboard"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "your-jwt-token",
+      "type": "string"
+    },
+    {
+      "key": "videoId",
+      "value": "video-id-here",
+      "type": "string"
+    },
+    {
+      "key": "cursor",
+      "value": "cursor-value",
+      "type": "string"
+    }
+  ]
+} 

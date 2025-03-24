@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator prisma_client {
+  provider = "prisma-client-js"
+  seed     = "node prisma/seed.js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(uuid())
+  username      String        @unique
+  tokenBalance  Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  avatar        String?
+  email         String        @unique
+  password      String
+  followers     Int           @default(0)
+  following     Int           @default(0)
+  isInfluencer  Boolean       @default(false)
+  totalEarnings Int           @default(0)
+  worldId       String        @unique
+  achievements  Achievement[]
+  badges        Badge[]
+  comments      Comment[]
+  likes         Like[]
+  nfts          NFT[]
+  streaks       Streak[]
+  transactions  Transaction[]
+  videos        Video[]
+}
+
+model Video {
+  id           String    @id @default(uuid())
+  userId       String
+  thumbnailUrl String?
+  views        Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  description  String?
+  duration     Int
+  title        String
+  likeCount    Int       @default(0)
+  tags         String[]
+  url          String
+  comments     Comment[]
+  likes        Like[]
+  nfts         NFT[]
+  user         User      @relation(fields: [userId], references: [id])
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  videoId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  video     Video    @relation(fields: [videoId], references: [id])
+
+  @@unique([userId, videoId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  videoId   String
+  user      User     @relation(fields: [userId], references: [id])
+  video     Video    @relation(fields: [videoId], references: [id])
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  userId      String
+  amount      Int
+  createdAt   DateTime @default(now())
+  description String?
+  type        String
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Mission {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  reward      Int
+  target      Int
+  type        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Streak {
+  id            String   @id @default(uuid())
+  userId        String
+  currentStreak Int      @default(0)
+  longestStreak Int      @default(0)
+  lastActive    DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Badge {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  description String
+  earnedAt    DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model NFT {
+  id        String   @id @default(uuid())
+  userId    String
+  videoId   String?
+  tokenId   String   @unique
+  metadata  Json
+  price     Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  video     Video?   @relation(fields: [videoId], references: [id])
+}
+
+model Achievement {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  reward      Float
+  progress    Float    @default(0)
+  target      Float
+  unlocked    Boolean  @default(false)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+enum TransactionType {
+  EARN
+  WITHDRAW
+  PURCHASE
+  SALE
+}
