@@ -182,8 +182,8 @@ class TokenService {
         }
       }
 
-      // Calculate token reward (0.1 tokens per 3 seconds, max 10 tokens per video)
-      const tokenReward = Math.min(Math.floor(seconds / 3) * 0.1, 10);
+      // Calculate token reward (0.1 tokens per 5 seconds, max 10 tokens per video)
+      const tokenReward = Math.min(Math.floor(seconds / 5) * 0.1, 10);
       
       if (tokenReward > 0) {
         // Start a transaction to ensure atomicity
@@ -388,10 +388,10 @@ class TokenService {
   async getBalance(userId) {
     try {
       // Try to get from Redis cache first
-      const cachedBalance = await redisClient.get(`user:${userId}:balance`);
-      if (cachedBalance) {
+      //const cachedBalance = await redisClient.get(`user:${userId}:balance`);
+      /*if (cachedBalance) {
         return parseFloat(cachedBalance);
-      }
+      }*/
 
       // If not in cache, get from database
       const user = await prisma.user.findUnique({
@@ -403,12 +403,12 @@ class TokenService {
       }
 
       // Cache the result
-      await redisClient.set(
+      /*await redisClient.set(
         `user:${userId}:balance`,
         user.tokenBalance.toString(),
         'EX',
         300 // Cache for 5 minutes
-      );
+      );*/
 
       return user.tokenBalance;
     } catch (error) {
