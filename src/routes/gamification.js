@@ -4,6 +4,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const logger = require('../utils/logger');
 const { authenticateToken } = require('../middleware/auth');
+const gamificationService = require('../services/gamificationService');
 
 /**
  * @swagger
@@ -141,10 +142,13 @@ router.get('/badges', authenticateToken, async (req, res) => {
  */
 router.get('/missions', authenticateToken, async (req, res) => {
   try {
-    const missions = await prisma.mission.findMany({
+    const missions = await prisma.userMission.findMany({
       where: {
         userId: req.user.id,
         completed: false
+      },
+      include: {
+        mission: true
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -189,33 +193,40 @@ router.get('/missions', authenticateToken, async (req, res) => {
  */
 router.post('/missions/:missionId/progress', authenticateToken, async (req, res) => {
   try {
-    const { missionId } = req.params;
     const { progress } = req.body;
+    const { missionId } = req.params;
 
-    const mission = await prisma.mission.findUnique({
-      where: { id: missionId }
+    const userMission = await prisma.userMission.findFirst({
+      where: {
+        userId: req.user.id,
+        missionId,
+      },
+      include: {
+        mission: true,
+      },
     });
 
-    if (!mission) {
-      return res.status(404).json({ error: 'Mission not found' });
+    if (!userMission) {
+      return res.status(404).json({ status: 'error', error: 'Mission not found' });
     }
 
-    if (mission.userId !== req.user.id) {
-      return res.status(403).json({ error: 'Not authorized to update this mission' });
-    }
-
-    const updatedMission = await prisma.mission.update({
-      where: { id: missionId },
+    const updatedMission = await prisma.userMission.update({
+      where: {
+        id: userMission.id,
+      },
       data: {
         progress,
-        completed: progress >= mission.target
-      }
+        completed: progress >= userMission.mission.requirements[0].amount,
+      },
+      include: {
+        mission: true,
+      },
     });
 
-    res.json(updatedMission);
+    res.json({ status: 'success', data: updatedMission });
   } catch (error) {
     logger.error('Error updating mission progress:', error);
-    res.status(500).json({ error: 'Failed to update mission progress' });
+    res.status(500).json({ status: 'error', error: 'Failed to update mission progress' });
   }
 });
 
@@ -265,79 +276,50 @@ router.post('/missions/:missionId/progress', authenticateToken, async (req, res)
  */
 router.get('/achievements', authenticateToken, async (req, res) => {
   try {
-    const achievements = await prisma.achievement.findMany({
-      where: { userId: req.user.id },
-      orderBy: { unlockedAt: 'desc' }
+    const achievements = await prisma.userAchievement.findMany({
+      where: {
+        userId: req.user.id,
+      },
+      include: {
+        achievement: true,
+      },
     });
-
-    res.json({ achievements });
+    res.json({ status: 'success', data: achievements });
   } catch (error) {
     logger.error('Error fetching achievements:', error);
-    res.status(500).json({ error: 'Failed to fetch achievements' });
+    res.status(500).json({ status: 'error', error: 'Failed to fetch achievements' });
   }
 });
 
 /**
  * @swagger
- * /api/gamification/achievements/{achievementId}/progress:
- *   post:
- *     summary: Update achievement progress
+ * /api/gamification/achievements/progress:
+ *   get:
+ *     summary: Check achievement progress
  *     tags: [Gamification]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: achievementId
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               progress:
- *                 type: number
  *     responses:
  *       200:
- *         description: Achievement progress updated successfully
+ *         description: Achievement progress retrieved successfully
  *       401:
  *         description: Unauthorized
- *       404:
- *         description: Achievement not found
  */
-router.post('/achievements/:achievementId/progress', authenticateToken, async (req, res) => {
+router.get('/achievements/progress', authenticateToken, async (req, res) => {
   try {
-    const { achievementId } = req.params;
-    const { progress } = req.body;
-
-    const achievement = await prisma.achievement.findUnique({
-      where: { id: achievementId }
+    const achievements = await prisma.userAchievement.findMany({
+      where: {
+        userId: req.user.id,
+        completed: false,
+      },
+      include: {
+        achievement: true,
+      },
     });
-
-    if (!achievement) {
-      return res.status(404).json({ error: 'Achievement not found' });
-    }
-
-    if (achievement.userId !== req.user.id) {
-      return res.status(403).json({ error: 'Not authorized to update this achievement' });
-    }
-
-    const updatedAchievement = await prisma.achievement.update({
-      where: { id: achievementId },
-      data: {
-        progress,
-        completed: progress >= achievement.target,
-        unlockedAt: progress >= achievement.target ? new Date() : undefined
-      }
-    });
-
-    res.json(updatedAchievement);
+    res.json({ status: 'success', data: achievements });
   } catch (error) {
-    logger.error('Error updating achievement progress:', error);
-    res.status(500).json({ error: 'Failed to update achievement progress' });
+    logger.error('Error checking achievement progress:', error);
+    res.status(500).json({ status: 'error', error: 'Failed to check achievement progress' });
   }
 });
 
@@ -468,48 +450,382 @@ router.get('/leaderboard', authenticateToken, async (req, res) => {
  *       401:
  *         description: Unauthorized
  */
-router.post('/claim-reward', authenticateToken, async (req, res) => {
+router.post('/missions/:missionId/claim', authenticateToken, async (req, res) => {
   try {
-    const { missionId } = req.body;
-    const mission = await prisma.mission.findUnique({
-      where: { id: missionId }
+    const { missionId } = req.params;
+
+    const userMission = await prisma.userMission.findFirst({
+      where: {
+        userId: req.user.id,
+        missionId,
+      },
+      include: {
+        mission: true,
+      },
     });
 
-    if (!mission) {
-      return res.status(404).json({ error: 'Mission not found' });
+    if (!userMission) {
+      return res.status(404).json({ status: 'error', error: 'Mission not found' });
     }
 
-    if (mission.userId !== req.user.id) {
-      return res.status(403).json({ error: 'Not authorized to claim this reward' });
+    if (!userMission.completed) {
+      return res.status(400).json({ status: 'error', error: 'Mission not completed' });
     }
 
-    if (!mission.completed) {
-      return res.status(400).json({ error: 'Mission not completed' });
+    // Update user tokens
+    await prisma.user.update({
+      where: {
+        id: req.user.id,
+      },
+      data: {
+        tokens: {
+          increment: userMission.mission.reward,
+        },
+      },
+    });
+
+    // Mark mission as claimed
+    const updatedMission = await prisma.userMission.update({
+      where: {
+        id: userMission.id,
+      },
+      data: {
+        completedAt: new Date(),
+      },
+      include: {
+        mission: true,
+      },
+    });
+
+    res.json({ status: 'success', data: updatedMission });
+  } catch (error) {
+    logger.error('Error claiming mission reward:', error);
+    res.status(500).json({ status: 'error', error: 'Failed to claim mission reward' });
+  }
+});
+
+/**
+ * @swagger
+ * /api/gamification/stats:
+ *   get:
+ *     summary: Get user's gamification stats
+ *     tags: [Gamification]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User's gamification stats retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     streak:
+ *                       type: object
+ *                       properties:
+ *                         currentStreak:
+ *                           type: integer
+ *                         longestStreak:
+ *                           type: integer
+ *                     achievements:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           type: integer
+ *                         unlocked:
+ *                           type: integer
+ *                         list:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                     missions:
+ *                       type: object
+ *                       properties:
+ *                         available:
+ *                           type: integer
+ *                         list:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ */
+router.get('/stats', authenticateToken, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: req.user.id,
+      },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        tokenBalance: true,
+        streak: true,
+        lastStreakDate: true,
+        totalWatchTime: true,
+        videos: {
+          select: {
+            id: true,
+            title: true,
+            url: true,
+            thumbnailUrl: true,
+            createdAt: true,
+            views: true,
+            description: true,
+            duration: true,
+            likeCount: true,
+            tags: true,
+            tokenReward: true
+          }
+        },
+        transactions: {
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 50,
+          select: {
+            id: true,
+            amount: true,
+            type: true,
+            description: true,
+            createdAt: true,
+            videoId: true
+          }
+        },
+        _count: {
+          select: {
+            videos: true,
+            likes: true,
+            comments: true,
+            userAchievements: {
+              where: {
+                completed: true
+              }
+            },
+            userMissions: {
+              where: {
+                completed: true
+              }
+            }
+          }
+        },
+        userAchievements: {
+          where: {
+            completed: true
+          },
+          include: {
+            achievement: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                reward: true,
+                icon: true
+              }
+            }
+          }
+        },
+        userMissions: {
+          where: {
+            completed: true
+          },
+          include: {
+            mission: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                reward: true,
+                type: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ 
+        status: 'error',
+        error: 'User not found' 
+      });
     }
 
-    if (mission.rewardClaimed) {
-      return res.status(400).json({ error: 'Reward already claimed' });
-    }
+    // Transform the data to ensure consistent field names
+    const response = {
+      status: 'success',
+      data: {
+        user: {
+          id: user.id,
+          username: user.username,
+          avatar: user.avatar,
+          tokenBalance: user.tokenBalance,
+          streak: user.streak || 0,
+          lastStreakDate: user.lastStreakDate,
+          totalWatchTime: user.totalWatchTime || 0
+        },
+        stats: {
+          videos: user._count.videos || 0,
+          likes: user._count.likes || 0,
+          comments: user._count.comments || 0,
+          completedAchievements: user._count.userAchievements || 0,
+          completedMissions: user._count.userMissions || 0
+        },
+        videos: user.videos.map(video => ({
+          id: video.id,
+          title: video.title,
+          videoUrl: video.url, // Map url to videoUrl for frontend compatibility
+          thumbnailUrl: video.thumbnailUrl,
+          createdAt: video.createdAt,
+          views: video.views || 0,
+          description: video.description,
+          duration: video.duration,
+          likeCount: video.likeCount || 0,
+          tags: video.tags || [],
+          tokenReward: video.tokenReward || 0
+        })),
+        achievements: user.userAchievements.map(ua => ({
+          id: ua.achievement.id,
+          name: ua.achievement.name,
+          description: ua.achievement.description,
+          reward: ua.achievement.reward,
+          icon: ua.achievement.icon,
+          completedAt: ua.completedAt
+        })),
+        missions: user.userMissions.map(um => ({
+          id: um.mission.id,
+          name: um.mission.name,
+          description: um.mission.description,
+          reward: um.mission.reward,
+          type: um.mission.type,
+          completedAt: um.completedAt
+        })),
+        transactions: user.transactions.map(tx => ({
+          id: tx.id,
+          amount: tx.amount,
+          type: tx.type,
+          description: tx.description,
+          createdAt: tx.createdAt,
+          videoId: tx.videoId
+        }))
+      }
+    };
 
-    // Update mission and user balance in a transaction
-    const [updatedMission, updatedUser] = await prisma.$transaction([
-      prisma.mission.update({
-        where: { id: missionId },
-        data: { rewardClaimed: true }
-      }),
-      prisma.user.update({
-        where: { id: req.user.id },
-        data: { tokenBalance: { increment: mission.reward } }
-      })
-    ]);
+    res.json(response);
+  } catch (error) {
+    logger.error('Error fetching gamification stats:', error);
+    res.status(500).json({ 
+      status: 'error',
+      error: 'Failed to fetch gamification stats',
+      details: error.message 
+    });
+  }
+});
 
+/**
+ * @swagger
+ * /api/gamification/missions:
+ *   get:
+ *     summary: Get available missions
+ *     tags: [Gamification]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Available missions retrieved successfully
+ */
+router.get('/missions', authenticateToken, async (req, res) => {
+  try {
+    const missions = await gamificationService.getAvailableMissions(req.user.id);
+    
     res.json({
-      message: 'Reward claimed successfully',
-      reward: mission.reward
+      status: 'success',
+      data: missions
     });
   } catch (error) {
-    logger.error('Error claiming reward:', error);
-    res.status(500).json({ error: 'Failed to claim reward' });
+    logger.error('Error getting missions:', error);
+    res.status(500).json({
+      status: 'error',
+      error: 'Failed to get missions'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/gamification/missions/{missionId}/complete:
+ *   post:
+ *     summary: Complete a mission
+ *     tags: [Gamification]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: missionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Mission completed successfully
+ */
+router.post('/missions/:missionId/complete', authenticateToken, async (req, res) => {
+  try {
+    const result = await gamificationService.completeMission(
+      req.user.id,
+      req.params.missionId
+    );
+    
+    res.json({
+      status: 'success',
+      data: result
+    });
+  } catch (error) {
+    logger.error('Error completing mission:', error);
+    if (error.message.includes('already completed')) {
+      return res.status(400).json({
+        status: 'error',
+        error: error.message
+      });
+    }
+    res.status(500).json({
+      status: 'error',
+      error: 'Failed to complete mission'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/gamification/streak:
+ *   post:
+ *     summary: Update user's streak
+ *     tags: [Gamification]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Streak updated successfully
+ */
+router.post('/streak', authenticateToken, async (req, res) => {
+  try {
+    const streak = await gamificationService.updateStreak(req.user.id);
+
+    res.json({
+      status: 'success',
+      data: { streak }
+    });
+  } catch (error) {
+    logger.error('Error updating streak:', error);
+    res.status(500).json({
+      status: 'error',
+      error: 'Failed to update streak'
+    });
   }
 });
 

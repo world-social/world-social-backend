@@ -4,8 +4,36 @@ const { WorldID } = require('@worldcoin/minikit-js');
 const logger = require('../utils/logger');
 
 const prisma = new PrismaClient();
+
+// Create Redis client with retry strategy
 const redisClient = Redis.createClient({
-  url: process.env.REDIS_URL
+  url: process.env.REDIS_URL,
+  socket: {
+    reconnectStrategy: (retries) => {
+      if (retries > 10) {
+        return new Error('Too many retries');
+      }
+      return Math.min(retries * 100, 3000);
+    }
+  }
+});
+
+// Connect to Redis
+redisClient.connect().catch(err => {
+  logger.error('Redis connection error:', err);
+});
+
+// Handle Redis connection events
+redisClient.on('connect', () => {
+  logger.info('Redis client connected');
+});
+
+redisClient.on('error', (err) => {
+  logger.error('Redis client error:', err);
+});
+
+redisClient.on('reconnecting', () => {
+  logger.info('Redis client reconnecting...');
 });
 
 class TokenService {
@@ -134,11 +162,81 @@ class TokenService {
 
   async rewardWatchTime(userId, seconds, videoId) {
     try {
-      // Calculate token reward (0.1 tokens per 3 seconds)
-      const tokenReward = Math.floor(seconds / 3) * 0.1;
+      // Ensure Redis is connected
+      if (!redisClient.isOpen) {
+        await redisClient.connect();
+      }
+
+      // Check if user has already been rewarded for this video in the last 24 hours
+      const lastRewardKey = `watch_reward:${userId}:${videoId}`;
+      const lastReward = await redisClient.get(lastRewardKey);
+      
+      if (lastReward) {
+        const lastRewardTime = parseInt(lastReward);
+        const now = Date.now();
+        const hoursSinceLastReward = (now - lastRewardTime) / (1000 * 60 * 60);
+        
+        if (hoursSinceLastReward < 24) {
+          logger.info(`User ${userId} already received reward for video ${videoId} in the last 24 hours`);
+          return 0;
+        }
+      }
+
+      // Calculate token reward (0.1 tokens per 3 seconds, max 10 tokens per video)
+      const tokenReward = Math.min(Math.floor(seconds / 3) * 0.1, 10);
       
       if (tokenReward > 0) {
-        await this.addTokens(userId, tokenReward, 'EARN', videoId);
+        // Start a transaction to ensure atomicity
+        const result = await prisma.$transaction(async (tx) => {
+          // Update user's token balance
+          const updatedUser = await tx.user.update({
+            where: { id: userId },
+            data: {
+              tokenBalance: {
+                increment: tokenReward
+              },
+              totalWatchTime: {
+                increment: seconds
+              }
+            }
+          });
+
+          // Update video's token reward
+          await tx.video.update({
+            where: { id: videoId },
+            data: {
+              tokenReward: {
+                increment: tokenReward
+              }
+            }
+          });
+
+          // Create transaction record
+          const transaction = await tx.transaction.create({
+            data: {
+              userId,
+              videoId,
+              amount: tokenReward,
+              type: 'EARN',
+              description: `Watch time reward for video ${videoId}`
+            }
+          });
+
+          return {
+            user: updatedUser,
+            transaction
+          };
+        });
+
+        // Set the last reward time in Redis (24 hours expiry)
+        await redisClient.set(lastRewardKey, Date.now().toString(), {
+          EX: 24 * 60 * 60 // 24 hours in seconds
+        });
+
+        // Invalidate user balance cache
+        await redisClient.del(`user:${userId}:balance`);
+
+        logger.info(`Rewarded ${tokenReward} tokens to user ${userId} for watching video ${videoId}`);
         return tokenReward;
       }
       
@@ -315,6 +413,97 @@ class TokenService {
       return user.tokenBalance;
     } catch (error) {
       throw new Error(`Error getting balance: ${error.message}`);
+    }
+  }
+
+  async checkDailyBonus(userId) {
+    try {
+      if (!redisClient.isOpen) {
+        await redisClient.connect();
+      }
+
+      const lastBonusKey = `daily_bonus:${userId}`;
+      const lastBonus = await redisClient.get(lastBonusKey);
+      
+      if (lastBonus) {
+        const lastBonusTime = parseInt(lastBonus);
+        const now = Date.now();
+        const hoursSinceLastBonus = (now - lastBonusTime) / (1000 * 60 * 60);
+        
+        if (hoursSinceLastBonus < 24) {
+          return {
+            canCollect: false,
+            nextCollectionTime: new Date(lastBonusTime + (24 * 60 * 60 * 1000))
+          };
+        }
+      }
+      
+      return {
+        canCollect: true,
+        nextCollectionTime: null
+      };
+    } catch (error) {
+      logger.error('Error checking daily bonus:', error);
+      throw error;
+    }
+  }
+
+  async claimDailyBonus(userId) {
+    try {
+      if (!redisClient.isOpen) {
+        await redisClient.connect();
+      }
+
+      const bonusStatus = await this.checkDailyBonus(userId);
+      
+      if (!bonusStatus.canCollect) {
+        throw new Error('Daily bonus already collected');
+      }
+
+      const DAILY_BONUS_AMOUNT = 10;
+      
+      // Start a transaction to ensure atomicity
+      const result = await prisma.$transaction(async (tx) => {
+        // Update user's token balance
+        const updatedUser = await tx.user.update({
+          where: { id: userId },
+          data: {
+            tokenBalance: {
+              increment: DAILY_BONUS_AMOUNT
+            }
+          }
+        });
+
+        // Create transaction record
+        const transaction = await tx.transaction.create({
+          data: {
+            userId,
+            amount: DAILY_BONUS_AMOUNT,
+            type: 'DAILY_BONUS',
+            description: 'Daily login bonus'
+          }
+        });
+
+        return {
+          user: updatedUser,
+          transaction
+        };
+      });
+
+      // Set the last bonus time in Redis (24 hours expiry)
+      const lastBonusKey = `daily_bonus:${userId}`;
+      await redisClient.set(lastBonusKey, Date.now().toString(), {
+        EX: 24 * 60 * 60 // 24 hours in seconds
+      });
+
+      // Invalidate user balance cache
+      await redisClient.del(`user:${userId}:balance`);
+
+      logger.info(`Daily bonus of ${DAILY_BONUS_AMOUNT} tokens awarded to user ${userId}`);
+      return result;
+    } catch (error) {
+      logger.error('Error claiming daily bonus:', error);
+      throw error;
     }
   }
 }

@@ -7,6 +7,7 @@ const { promisify } = require('util');
 const os = require('os');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const logger = require('../utils/logger');
 
 // Initialize MinIO client
 const minioClient = new Client({
@@ -329,106 +330,123 @@ class VideoService {
     }
   }
 
+  async getFeed(cursor, limit = 10, userId) {
+    try {
+      // Convert cursor to Date if provided
+      const cursorDate = cursor ? new Date(parseInt(cursor)) : undefined;
+      
+      // Fetch videos with cursor-based pagination
+      const videos = await prisma.video.findMany({
+        take: limit + 1, // Take one extra to determine if there are more results
+        where: {
+          // Add cursor condition if provided
+          ...(cursorDate && {
+            createdAt: {
+              lt: cursorDate // Less than the cursor date for backwards pagination
+            }
+          })
+        },
+        orderBy: {
+          createdAt: 'desc' // Most recent first
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              avatar: true
+            }
+          },
+          _count: {
+            select: {
+              likes: true,
+              comments: true
+            }
+          }
+        }
+      });
+
+      // Determine if there are more results
+      const hasMore = videos.length > limit;
+      const results = hasMore ? videos.slice(0, -1) : videos;
+      
+      // Get the cursor for the next page
+      const lastVideo = results[results.length - 1];
+      const nextCursor = hasMore ? lastVideo.createdAt.getTime().toString() : null;
+
+      // Transform videos to include complete URLs and counts
+      const transformedVideos = results.map(video => ({
+        id: video.id,
+        title: video.title,
+        description: video.description,
+        videoUrl: video.url,
+        thumbnailUrl: video.thumbnailUrl,
+        duration: video.duration,
+        views: video.views,
+        createdAt: video.createdAt,
+        user: video.user,
+        stats: {
+          likes: video._count.likes,
+          comments: video._count.comments
+        },
+        tags: video.tags || []
+      }));
+
+      return {
+        videos: transformedVideos,
+        nextCursor,
+        hasMore
+      };
+    } catch (error) {
+      logger.error('Error fetching video feed:', error);
+      throw error;
+    }
+  }
+
   async getVideoMetadata(videoId) {
     try {
-      // Try to get from Redis cache first
-      const cachedMetadata = await redisClient.get(`video:${videoId}`);
-      if (cachedMetadata) {
-        try {
-          const metadata = JSON.parse(cachedMetadata);
-          if (!metadata || !metadata.videoUrl) {
-            // Clear invalid cache entry
-            await redisClient.del(`video:${videoId}`);
-            throw new Error('Invalid cached metadata');
-          }
-
-          // Verify file exists in MinIO
-          try {
-            const filePath = this.extractFilePath(metadata.videoUrl);
-            await minioClient.statObject(this.bucketName, filePath);
-          } catch (error) {
-            console.warn(`Video file not found in MinIO for video ${videoId}:`, error.message);
-            // Clear cache if file doesn't exist
-            await redisClient.del(`video:${videoId}`);
-            throw new Error(`Video file not found in storage: ${error.message}`);
-          }
-
-          return metadata;
-        } catch (error) {
-          // Clear invalid cache entry
-          await redisClient.del(`video:${videoId}`);
-          console.warn('Cleared invalid cache entry:', error.message);
-        }
-      }
-
-      // If not in cache or cache was invalid, get from database
-      const video = await prisma.video.findFirst({
+      const video = await prisma.video.findUnique({
         where: { id: videoId },
-        include: { user: true }
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              avatar: true
+            }
+          },
+          _count: {
+            select: {
+              likes: true,
+              comments: true
+            }
+          }
+        }
       });
 
       if (!video) {
         throw new Error('Video not found');
       }
 
-      // If video has no url, return a basic metadata object
-      if (!video.url) {
-        console.warn(`Video ${videoId} has no url in database`);
-        return {
-          id: video.id,
-          title: video.title,
-          description: video.description,
-          videoUrl: null,
-          thumbnailUrl: null,
-          userId: video.userId,
-          duration: video.duration,
-          createdAt: video.createdAt
-        };
-      }
-
-      // Verify file exists in MinIO
-      try {
-        const filePath = this.extractFilePath(video.url);
-        await minioClient.statObject(this.bucketName, filePath);
-      } catch (error) {
-        console.warn(`Video file not found in MinIO for video ${videoId}:`, error.message);
-        // Return metadata with null URLs if file doesn't exist
-        return {
-          id: video.id,
-          title: video.title,
-          description: video.description,
-          videoUrl: null,
-          thumbnailUrl: null,
-          userId: video.userId,
-          duration: video.duration,
-          createdAt: video.createdAt
-        };
-      }
-
-      // Transform the database result to match our metadata format
-      const metadata = {
+      return {
         id: video.id,
         title: video.title,
         description: video.description,
         videoUrl: video.url,
-        thumbnailUrl: video.thumbnailUrl ? this.getFullUrl(video.thumbnailUrl) : null,
-        userId: video.userId,
+        thumbnailUrl: video.thumbnailUrl,
         duration: video.duration,
-        createdAt: video.createdAt
+        views: video.views,
+        createdAt: video.createdAt,
+        user: video.user,
+        stats: {
+          likes: video._count.likes,
+          comments: video._count.comments
+        },
+        tags: video.tags || []
       };
-
-      // Cache the result
-      await redisClient.set(
-        `video:${videoId}`,
-        JSON.stringify(metadata),
-        'EX',
-        3600
-      );
-
-      return metadata;
     } catch (error) {
-      console.error('Error in getVideoMetadata:', error);
-      throw new Error(`Error getting video metadata: ${error.message}`);
+      logger.error('Error getting video metadata:', error);
+      throw error;
     }
   }
 

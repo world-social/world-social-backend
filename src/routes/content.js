@@ -16,6 +16,7 @@ const { promisify } = require('util');
 const fs = require('fs').promises;
 const os = require('os');
 const multer = require('multer');
+const commentService = require('../services/commentService');
 
 // Configure multer for video uploads
 const storage = multer.diskStorage({
@@ -183,7 +184,7 @@ router.post('/upload', authenticateToken, upload.single('video'), async (req, re
  * @swagger
  * /api/content/feed:
  *   get:
- *     summary: Get video feed
+ *     summary: Get paginated video feed
  *     tags: [Content]
  *     security:
  *       - bearerAuth: []
@@ -202,99 +203,15 @@ router.post('/upload', authenticateToken, upload.single('video'), async (req, re
  *     responses:
  *       200:
  *         description: Video feed retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 data:
- *                   type: object
- *                   properties:
- *                     videos:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: string
- *                           title:
- *                             type: string
- *                           description:
- *                             type: string
- *                           url:
- *                             type: string
- *                           userId:
- *                             type: string
- *                           user:
- *                             type: object
- *                             properties:
- *                               id:
- *                                 type: string
- *                               username:
- *                                 type: string
- *                     nextCursor:
- *                       type: string
- *       401:
- *         description: Unauthorized
  */
 router.get('/feed', authenticateToken, async (req, res) => {
   try {
     const { cursor, limit = 10 } = req.query;
+    const feed = await videoService.getFeed(cursor, parseInt(limit), req.user.id);
     
-    // Log request parameters
-    logger.info(`Fetching video feed with cursor: ${cursor}, limit: ${limit}`);
-
-    // Get videos from database
-    const videos = await prisma.video.findMany({
-      take: parseInt(limit),
-      skip: cursor ? 1 : 0,
-      cursor: cursor ? { id: cursor } : undefined,
-      orderBy: {
-        createdAt: 'desc'
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            avatar: true
-          }
-        }
-      }
-    });
-
-    logger.info(`Found ${videos.length} videos`);
-
-    const nextCursor = videos.length === parseInt(limit) ? videos[videos.length - 1].id : null;
-
-    // Transform videos to include full URLs
-    const transformedVideos = await Promise.all(videos.map(async (video) => {
-      try {
-        const metadata = await videoService.getVideoMetadata(video.id);
-        return {
-          ...video,
-          videoUrl: metadata.videoUrl,
-          thumbnailUrl: metadata.thumbnailUrl
-        };
-      } catch (error) {
-        logger.warn(`Error getting metadata for video ${video.id}:`, error);
-        return null; // Return null for videos with missing metadata
-      }
-    }));
-
-    // Filter out videos with missing URLs
-    const validVideos = transformedVideos.filter(video => video && video.videoUrl);
-    logger.info(`Returning ${validVideos.length} valid videos`);
-
     res.json({
       status: 'success',
-      data: {
-        videos: validVideos,
-        nextCursor
-      }
+      data: feed
     });
   } catch (error) {
     logger.error('Error fetching feed:', error);
@@ -723,6 +640,307 @@ router.get('/tokens/history', authenticateToken, async (req, res) => {
   } catch (error) {
     logger.error('Error getting transaction history:', error);
     res.status(500).json({ error: 'Failed to get transaction history' });
+  }
+});
+
+/**
+ * @swagger
+ * /api/content/watch/{videoId}:
+ *   post:
+ *     summary: Record video watch time and reward tokens
+ *     tags: [Content]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: videoId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the video being watched
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - watchTime
+ *             properties:
+ *               watchTime:
+ *                 type: number
+ *                 description: Time spent watching the video in seconds
+ *     responses:
+ *       200:
+ *         description: Watch time recorded and tokens rewarded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     tokensEarned:
+ *                       type: number
+ *                       description: Number of tokens earned
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/watch/:videoId', authenticateToken, async (req, res) => {
+  try {
+    const { videoId } = req.params;
+    const { watchTime } = req.body;
+
+    if (!watchTime || watchTime < 0) {
+      return res.status(400).json({
+        status: 'error',
+        error: 'Invalid watch time'
+      });
+    }
+
+    // Verify video exists
+    const video = await prisma.video.findUnique({
+      where: { id: videoId }
+    });
+
+    if (!video) {
+      return res.status(404).json({
+        status: 'error',
+        error: 'Video not found'
+      });
+    }
+
+    // Don't reward tokens if user is watching their own video
+    if (video.userId === req.user.id) {
+      return res.json({
+        status: 'success',
+        data: { tokensEarned: 0 }
+      });
+    }
+
+    // Reward tokens for watch time
+    const tokensEarned = await tokenService.rewardWatchTime(
+      req.user.id,
+      watchTime,
+      videoId
+    );
+
+    res.json({
+      status: 'success',
+      data: { tokensEarned }
+    });
+  } catch (error) {
+    logger.error('Error recording watch time:', error);
+    res.status(500).json({
+      status: 'error',
+      error: error.message || 'Failed to record watch time'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/content/{videoId}/comments:
+ *   get:
+ *     summary: Get comments for a video
+ *     tags: [Content]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: videoId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Comments retrieved successfully
+ */
+router.get('/:videoId/comments', authenticateToken, async (req, res) => {
+  try {
+    const { cursor, limit = 10 } = req.query;
+    const comments = await commentService.getComments(
+      req.params.videoId,
+      cursor,
+      parseInt(limit)
+    );
+
+    res.json({
+      status: 'success',
+      data: comments
+    });
+  } catch (error) {
+    logger.error('Error fetching comments:', error);
+    res.status(500).json({
+      status: 'error',
+      error: 'Failed to fetch comments',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/content/{videoId}/comments:
+ *   post:
+ *     summary: Add a comment to a video
+ *     tags: [Content]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: videoId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Comment added successfully
+ */
+router.post('/:videoId/comments', authenticateToken, async (req, res) => {
+  try {
+    const { content } = req.body;
+    
+    if (!content || content.trim().length === 0) {
+      return res.status(400).json({
+        status: 'error',
+        error: 'Comment content is required'
+      });
+    }
+
+    const comment = await commentService.addComment(
+      req.user.id,
+      req.params.videoId,
+      content.trim()
+    );
+
+    res.status(201).json({
+      status: 'success',
+      data: comment
+    });
+  } catch (error) {
+    logger.error('Error adding comment:', error);
+    res.status(500).json({
+      status: 'error',
+      error: 'Failed to add comment',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/content/comments/{commentId}:
+ *   delete:
+ *     summary: Delete a comment
+ *     tags: [Content]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Comment deleted successfully
+ */
+router.delete('/comments/:commentId', authenticateToken, async (req, res) => {
+  try {
+    await commentService.deleteComment(req.user.id, req.params.commentId);
+    
+    res.json({
+      status: 'success',
+      message: 'Comment deleted successfully'
+    });
+  } catch (error) {
+    logger.error('Error deleting comment:', error);
+    if (error.message.includes('Unauthorized')) {
+      return res.status(403).json({
+        status: 'error',
+        error: error.message
+      });
+    }
+    if (error.message.includes('not found')) {
+      return res.status(404).json({
+        status: 'error',
+        error: error.message
+      });
+    }
+    res.status(500).json({
+      status: 'error',
+      error: 'Failed to delete comment',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/content/comments/{commentId}/like:
+ *   post:
+ *     summary: Like a comment
+ *     tags: [Content]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Comment liked successfully
+ */
+router.post('/comments/:commentId/like', authenticateToken, async (req, res) => {
+  try {
+    const stats = await commentService.likeComment(req.user.id, req.params.commentId);
+    
+    res.json({
+      status: 'success',
+      data: stats
+    });
+  } catch (error) {
+    logger.error('Error liking comment:', error);
+    if (error.message.includes('already liked')) {
+      return res.status(400).json({
+        status: 'error',
+        error: error.message
+      });
+    }
+    res.status(500).json({
+      status: 'error',
+      error: 'Failed to like comment',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
