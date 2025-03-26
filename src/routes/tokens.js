@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 const logger = require('../utils/logger');
 const { authenticateToken } = require('../middleware/auth');
 const Redis = require('redis');
+const tokenService = require('../services/tokenService');
 
 const redisClient = Redis.createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379'
@@ -328,103 +329,68 @@ router.get('/stats', authenticateToken, async (req, res) => {
 
 /**
  * @swagger
- * /api/tokens/daily-bonus/status:
+ * /api/tokens/daily/status:
  *   get:
- *     summary: Check if user has collected daily bonus
+ *     summary: Check if user can claim daily tokens
  *     tags: [Tokens]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Daily bonus status retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 hasCollected:
- *                   type: boolean
- *                   description: Whether the user has collected today's bonus
- *       401:
- *         description: Unauthorized
+ *         description: Daily token claim status retrieved successfully
  */
-router.get('/daily-bonus/status', authenticateToken, async (req, res) => {
+router.get('/daily/status', authenticateToken, async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
-    const key = `daily_bonus:${req.user.id}:${today}`;
-    
-    const hasCollected = await redisClient.get(key);
-    
-    res.json({ hasCollected: !!hasCollected });
+    const status = await tokenService.checkDailyTokens(req.user.id);
+    res.json({
+      status: 'success',
+      data: {
+        canClaim: status.canCollect,
+        nextClaimTime: status.nextCollectionTime ? status.nextCollectionTime.getTime() : null
+      }
+    });
   } catch (error) {
-    logger.error('Error checking daily bonus status:', error);
-    res.status(500).json({ error: 'Failed to check daily bonus status' });
+    logger.error('Error checking claim status:', error);
+    res.status(500).json({
+      status: 'error',
+      error: error.message || 'Failed to check claim status'
+    });
   }
 });
 
 /**
  * @swagger
- * /api/tokens/daily-bonus:
+ * /api/tokens/daily:
  *   post:
- *     summary: Collect daily bonus
+ *     summary: Claim daily tokens
  *     tags: [Tokens]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Daily bonus collected successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 amount:
- *                   type: number
- *                   description: Amount of tokens received
- *       400:
- *         description: Already collected today's bonus
- *       401:
- *         description: Unauthorized
+ *         description: Daily tokens claimed successfully
  */
-router.post('/daily-bonus', authenticateToken, async (req, res) => {
+router.post('/daily', authenticateToken, async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
-    const key = `daily_bonus:${req.user.id}:${today}`;
+    const result = await tokenService.claimDailyTokens(req.user.id);
     
-    // Check if already collected today
-    const hasCollected = await redisClient.get(key);
-    if (hasCollected) {
-      return res.status(400).json({ error: 'Already collected today\'s bonus' });
-    }
+    // Get the next claim status which includes the next claim time
+    const nextStatus = await tokenService.checkDailyTokens(req.user.id);
 
-    const bonusAmount = 10; // Daily bonus amount
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.id }
-    });
-
-    // Update user's token balance
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { tokenBalance: { increment: bonusAmount } }
-    });
-
-    // Record the transaction
-    await prisma.transaction.create({
+    res.json({
+      status: 'success',
       data: {
-        userId: user.id,
-        amount: bonusAmount,
-        type: 'REWARD',
-        description: 'Daily bonus reward'
+        transaction: result.transaction,
+        user: result.user,
+        nextClaimTime: nextStatus.nextCollectionTime.getTime()
       }
     });
-
-    // Mark as collected in Redis (expires in 24 hours)
-    await redisClient.set(key, '1', { EX: 86400 });
-
-    res.json({ amount: bonusAmount });
   } catch (error) {
-    logger.error('Error collecting daily bonus:', error);
-    res.status(500).json({ error: 'Failed to collect daily bonus' });
+    logger.error('Error claiming daily tokens:', error);
+    res.status(500).json({
+      status: 'error',
+      error: error.message || 'Failed to claim daily tokens'
+    });
   }
 });
 
