@@ -1,9 +1,12 @@
 const { PrismaClient } = require('@prisma/client');
 const Redis = require('redis');
 const { WorldID } = require('@worldcoin/minikit-js');
+const { ethers } = require('ethers');
 const logger = require('../utils/logger');
 
 const prisma = new PrismaClient();
+
+require('dotenv').config();
 
 // Create Redis client with retry strategy
 const redisClient = Redis.createClient({
@@ -441,18 +444,28 @@ class TokenService {
           };
         }
       }
+
+      let signature = "";
+      const wallet = new ethers.Wallet(process.env.BACKEND_PRIVATE_KEY);
+      // Define the message to be signed. You can customize this payload as needed.
+      const message = `DailyClaim:${userId}:${Date.now()}`;
+      signature = await wallet.signMessage(message);
+
+      console.log("Signature: ", signature);
       
       // If user can collect, set next collection time to 24 hours from now
       return {
         canCollect: true,
-        nextCollectionTime: new Date(Date.now() + (24 * 60 * 60 * 1000))
+        nextCollectionTime: new Date(Date.now() + (24 * 60 * 60 * 1000)),
+        signature: signature
       };
     } catch (error) {
       logger.error('Error checking daily tokens:', error);
       // Return default state with next collection time
       return {
         canCollect: true,
-        nextCollectionTime: new Date(Date.now() + (24 * 60 * 60 * 1000))
+        nextCollectionTime: new Date(Date.now() + (24 * 60 * 60 * 1000)),
+        signature: signature
       };
     }
   }
