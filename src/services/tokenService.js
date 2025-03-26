@@ -458,72 +458,48 @@ class TokenService {
   }
 
   async claimDailyTokens(userId) {
-    try {
-      // Check Redis connection
-      if (!redisClient.isOpen) {
-        try {
-          await redisClient.connect();
-        } catch (error) {
-          logger.error('Failed to connect to Redis:', error);
-          throw new Error('Service temporarily unavailable');
+    const client = await prisma.$transaction(async (tx) => {
+      // Check if user can claim
+      const lastClaim = await tx.dailyBonus.findFirst({
+        where: { userId },
+        orderBy: { collectedAt: 'desc' }
+      });
+
+      if (lastClaim) {
+        const now = new Date();
+        const lastClaimDate = new Date(lastClaim.collectedAt);
+        const diff = now.getTime() - lastClaimDate.getTime();
+        const hoursSinceLastClaim = diff / (1000 * 60 * 60);
+
+        if (hoursSinceLastClaim < 24) {
+          throw new Error('Daily bonus already claimed');
         }
       }
 
-      const claimStatus = await this.checkDailyTokens(userId);
-      
-      if (!claimStatus.canCollect) {
-        throw new Error('Daily tokens already claimed');
-      }
-
-      const DAILY_TOKEN_AMOUNT = 10;
-      
-      // TODO: Integrate with blockchain - This will be replaced with smart contract minting
-      logger.info('TODO: Implement blockchain minting for daily rewards');
-      console.log('Future implementation: Mint tokens through smart contract for userId:', userId);
-      
-      // Start a transaction to ensure atomicity
-      const result = await prisma.$transaction(async (tx) => {
-        // Update user's token balance
-        const updatedUser = await tx.user.update({
-          where: { id: userId },
-          data: {
-            tokenBalance: {
-              increment: DAILY_TOKEN_AMOUNT
-            }
-          }
-        });
-
-        // Create transaction record
-        const transaction = await tx.transaction.create({
-          data: {
-            userId,
-            amount: DAILY_TOKEN_AMOUNT,
-            type: 'DAILY_CLAIM',
-            description: 'Daily token claim'
-          }
-        });
-
-        return {
-          user: updatedUser,
-          transaction
-        };
+      // Create daily bonus record
+      const dailyBonus = await tx.dailyBonus.create({
+        data: {
+          userId,
+          amount: 100, // Fixed amount for daily bonus
+          collectedAt: new Date()
+        }
       });
 
-      // Set the last claim time in Redis (24 hours expiry)
-      const lastClaimKey = `daily_claim:${userId}`;
-      await redisClient.set(lastClaimKey, Date.now().toString(), {
-        EX: 24 * 60 * 60 // 24 hours in seconds
+      // TODO: Call smart contract to transfer tokens
+      // After successful smart contract call:
+      
+      // Update user's token balance to zero
+      const user = await tx.user.update({
+        where: { id: userId },
+        data: {
+          tokenBalance: 0
+        }
       });
 
-      // Invalidate user balance cache
-      await redisClient.del(`user:${userId}:balance`);
+      return { dailyBonus, user };
+    });
 
-      logger.info(`Daily claim of ${DAILY_TOKEN_AMOUNT} tokens awarded to user ${userId}`);
-      return result;
-    } catch (error) {
-      logger.error('Error claiming daily tokens:', error);
-      throw error;
-    }
+    return client;
   }
 }
 
