@@ -4,7 +4,7 @@
   "description": "Backend for WorldSocial - A decentralized social media platform",
   "main": "src/app.js",
   "scripts": {
-    "start": "prisma generate && prisma migrate deploy && node src/app.js",
+    "start": "pnpm install && npx prisma generate && npx prisma migrate deploy && node src/app.js",
     "dev": "nodemon src/app.js",
     "test": "jest",
     "lint": "eslint .",
@@ -45,7 +45,8 @@
     "socket.io": "^4.7.4",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "winston": "^3.11.0"
+    "winston": "^3.11.0",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",

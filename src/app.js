@@ -115,8 +115,24 @@ app.get('/', (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' })
-})
+  // Check database connection
+  prisma.$queryRaw`SELECT 1`
+    .then(() => {
+      res.status(200).json({
+        status: 'ok',
+        database: 'connected',
+        timestamp: new Date().toISOString()
+      });
+    })
+    .catch((error) => {
+      logger.error('Health check failed:', error);
+      res.status(503).json({
+        status: 'error',
+        database: 'disconnected',
+        error: error.message
+      });
+    });
+});
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));

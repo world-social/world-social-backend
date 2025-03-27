@@ -3,7 +3,7 @@ FROM node:20-slim
 
 # Install ffmpeg and other required dependencies
 RUN apt-get update && \
-    apt-get install -y ffmpeg && \
+    apt-get install -y ffmpeg curl postgresql-client && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -27,5 +27,9 @@ RUN npx prisma generate
 # Expose port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "run", "start"] 
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# Start the application with a wait for database
+CMD ["sh", "-c", "npx prisma migrate deploy && node src/app.js"] 
