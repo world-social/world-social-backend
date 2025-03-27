@@ -33,7 +33,8 @@ const corsOptions = {
       'http://localhost:3000',
       'http://localhost:3001',
       process.env.FRONTEND_URL,
-      'https://world-social-jlmnskyz0-italogouveias-projects.vercel.app'
+      'https://world-social-jlmnskyz0-italogouveias-projects.vercel.app',
+      'https://world-social.vercel.app'
     ];
     
     // Allow any Vercel preview deployment
@@ -48,7 +49,7 @@ const corsOptions = {
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept', 'Origin'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept', 'Origin', 'X-Requested-With'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   maxAge: 86400 // 24 hours
 };
@@ -85,7 +86,21 @@ const upload = multer({
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   crossOriginEmbedderPolicy: false,
-  crossOriginOpenerPolicy: false
+  crossOriginOpenerPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: ["'self'", "https://world-social-backend-production.up.railway.app", "https://*.vercel.app"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      fontSrc: ["'self'", "data:", "https:"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'", "https:", "blob:"],
+      frameSrc: ["'self'", "https:"],
+      upgradeInsecureRequests: []
+    }
+  }
 }));
 
 // Apply CORS middleware
