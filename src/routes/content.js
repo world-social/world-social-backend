@@ -18,6 +18,8 @@ const os = require('os');
 const multer = require('multer');
 const commentService = require('../services/commentService');
 
+const videoService = VideoService;
+
 // Configure multer for video uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -43,9 +45,6 @@ const upload = multer({
 });
 
 const router = express.Router();
-
-// Create a single instance of VideoService to be used across all routes
-const videoService = new VideoService();
 
 // Function to get video duration
 const getVideoDuration = (filePath) => {

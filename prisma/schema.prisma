@@ -1,9 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-}
-
-generator prisma_client {
-  provider = "prisma-client-js"
   seed     = "node prisma/seed.js"
 }
 

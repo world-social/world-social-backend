@@ -4,7 +4,7 @@
   "description": "Backend for WorldSocial - A decentralized social media platform",
   "main": "src/app.js",
   "scripts": {
-    "start": "node src/app.js",
+    "start": "prisma generate && prisma migrate deploy && node src/app.js",
     "dev": "nodemon src/app.js",
     "test": "jest",
     "lint": "eslint .",
@@ -24,6 +24,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.775.0",
     "@openzeppelin/contracts": "^5.0.1",
     "@prisma/client": "^5.10.2",
     "@worldcoin/minikit-js": "^1.0.0",

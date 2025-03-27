@@ -1,4 +1,3 @@
-const { Client } = require('minio');
 const Redis = require('redis');
 const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
@@ -8,44 +7,7 @@ const os = require('os');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const logger = require('../utils/logger');
-
-// Initialize MinIO client
-const minioClient = new Client({
-  endPoint: process.env.MINIO_ENDPOINT || 'localhost',
-  port: parseInt(process.env.MINIO_PORT || '9000'),
-  useSSL: false,
-  accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
-  secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin'
-});
-
-// Ensure bucket exists with proper permissions
-const bucketName = process.env.MINIO_BUCKET || 'worldsocial-videos';
-const policy = {
-  Version: '2012-10-17',
-  Statement: [
-    {
-      Effect: 'Allow',
-      Principal: { AWS: ['*'] },
-      Action: ['s3:GetObject'],
-      Resource: [`arn:aws:s3:::${bucketName}/*`]
-    }
-  ]
-};
-
-(async () => {
-  try {
-    const exists = await minioClient.bucketExists(bucketName);
-    if (!exists) {
-      await minioClient.makeBucket(bucketName);
-      console.log('Bucket created successfully');
-    }
-    // Set bucket policy for public read access
-    await minioClient.setBucketPolicy(bucketName, JSON.stringify(policy));
-    console.log('Bucket policy set successfully');
-  } catch (err) {
-    console.error('Error initializing MinIO bucket:', err);
-  }
-})();
+const storageClient = require('../configs/storage');
 
 // Initialize Redis client
 const redisClient = Redis.createClient({
@@ -53,14 +15,16 @@ const redisClient = Redis.createClient({
 });
 
 // Connect to Redis
-redisClient.on('error', (err) => console.error('Redis Client Error:', err));
-redisClient.on('connect', () => console.log('Redis Client Connected'));
+redisClient.on('error', (err) => logger.error('Redis Client Error:', err));
+redisClient.on('connect', () => logger.info('Redis Client Connected'));
 
 const ffmpegPromise = promisify(ffmpeg);
 
 class VideoService {
   constructor() {
-    this.bucketName = process.env.MINIO_BUCKET || 'worldsocial-videos';
+    this.bucketName = process.env.AWS_BUCKET_NAME || process.env.MINIO_BUCKET || 'worldsocial-videos';
+    this.maxVideoSize = parseInt(process.env.MAX_VIDEO_SIZE) || 5242880; // 5MB default
+    this.videoRetentionDays = parseInt(process.env.VIDEO_RETENTION_DAYS) || 7;
     this.initialize();
   }
 
@@ -69,7 +33,7 @@ class VideoService {
       await this.ensureBucket();
       await this.connectRedis();
     } catch (error) {
-      console.error('Error initializing VideoService:', error);
+      logger.error('Error initializing VideoService:', error);
       throw error;
     }
   }
@@ -78,31 +42,31 @@ class VideoService {
     try {
       if (!redisClient.isOpen) {
         await redisClient.connect();
-        console.log('Redis connected successfully');
+        logger.info('Redis connected successfully');
       }
     } catch (error) {
-      console.error('Redis connection error:', error);
+      logger.error('Redis connection error:', error);
       throw error;
     }
   }
 
   async ensureBucket() {
     try {
-      const exists = await minioClient.bucketExists(this.bucketName);
-      if (!exists) {
-        await minioClient.makeBucket(this.bucketName);
-        await minioClient.setBucketPolicy(this.bucketName, JSON.stringify(policy));
-        console.log('Bucket created and policy set successfully');
-      }
+      await storageClient.ensureBucketExists(this.bucketName);
+      logger.info(`Bucket ${this.bucketName} ready`);
     } catch (error) {
-      console.error('Error ensuring bucket exists:', error);
+      logger.error('Error ensuring bucket exists:', error);
       throw error;
     }
   }
 
   // Helper method to get full URL for a file
   getFullUrl(filePath) {
-    return `http://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${this.bucketName}/${filePath}`;
+    if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
+      return `https://${this.bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${filePath}`;
+    } else {
+      return `http://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${this.bucketName}/${filePath}`;
+    }
   }
 
   // Helper method to extract file path from URL
@@ -110,7 +74,7 @@ class VideoService {
     // Remove protocol, host, and port if present
     const path = url.replace(/^https?:\/\/[^\/]+\//, '');
     // Remove bucket name if present
-    return path.replace(`${process.env.MINIO_BUCKET}/`, '');
+    return path.replace(`${this.bucketName}/`, '');
   }
 
   async uploadVideo(file, userId) {
@@ -150,7 +114,7 @@ class VideoService {
         duration = await new Promise((resolve, reject) => {
           ffmpeg.ffprobe(filePath, (err, metadata) => {
             if (err) {
-              console.error('ffprobe error:', err);
+              logger.error('ffprobe error:', err);
               reject(new Error(`Failed to get video duration: ${err.message}`));
             } else {
               resolve(metadata.format.duration);
@@ -161,7 +125,7 @@ class VideoService {
         throw new Error(`Failed to process video: ${error.message}`);
       }
 
-      console.info(`Video duration: ${duration} seconds`);
+      logger.info(`Video duration: ${duration} seconds`);
 
       // Create output path with timestamp to avoid conflicts
       const tempDir = os.tmpdir();
@@ -178,7 +142,7 @@ class VideoService {
               .output(outputPath)
               .on('end', resolve)
               .on('error', (err) => {
-                console.error('Error during trimming:', err);
+                logger.error('Error during trimming:', err);
                 reject(new Error(`Failed to trim video: ${err.message}`));
               })
               .run();
@@ -197,18 +161,6 @@ class VideoService {
         }
       }
 
-      // Upload to MinIO
-      try {
-        await minioClient.fPutObject(
-          this.bucketName,
-          finalFileName,
-          finalVideoPath
-        );
-        uploadedFiles.push(finalFileName);
-      } catch (error) {
-        throw new Error(`Failed to upload video to MinIO: ${error.message}`);
-      }
-
       // Generate thumbnail
       const thumbnailName = `${contentId}/${safeFileName.replace(/\.[^/.]+$/, '')}-thumb.jpg`;
       const thumbnailPath = path.join(tempDir, `thumb-${timestamp}.jpg`);
@@ -224,50 +176,52 @@ class VideoService {
             })
             .on('end', resolve)
             .on('error', (err) => {
-              console.error('Error generating thumbnail:', err);
+              logger.error('Error generating thumbnail:', err);
               reject(new Error(`Failed to generate thumbnail: ${err.message}`));
             });
         });
 
-        // Upload thumbnail to MinIO
-        await minioClient.fPutObject(
-          this.bucketName,
-          thumbnailName,
-          thumbnailPath
-        );
+        // Upload thumbnail to storage
+        const thumbnailBuffer = await fs.readFile(thumbnailPath);
+        await storageClient.uploadFile(thumbnailName, thumbnailBuffer);
         uploadedFiles.push(thumbnailName);
       } catch (error) {
-        console.warn('Failed to generate/upload thumbnail:', error.message);
+        logger.warn('Failed to generate/upload thumbnail:', error.message);
         // Continue without thumbnail
       }
 
-      // Clean up temporary files
+      // Upload video to storage
       try {
-        if (duration > 30) {
-          await fs.unlink(outputPath);
-        }
-        await fs.unlink(thumbnailPath);
+        const fileBuffer = await fs.readFile(finalVideoPath);
+        await storageClient.uploadFile(finalFileName, fileBuffer);
+        uploadedFiles.push(finalFileName);
+        logger.info(`Video uploaded successfully: ${finalFileName}`);
       } catch (error) {
-        console.warn('Failed to clean up temporary files:', error.message);
+        throw new Error(`Failed to upload video: ${error.message}`);
       }
 
       // Create video record in database
-      createdVideo = await prisma.video.create({
-        data: {
-          id: contentId,
-          userId,
-          title: file.originalname,
-          description: file.originalname,
-          thumbnailUrl: thumbnailName,
-          duration: Math.min(Math.round(duration), 30),
-          views: 0,
-          likeCount: 0,
-          tags: [],
-          url: this.getFullUrl(finalFileName)
-        }
-      });
+      try {
+        createdVideo = await prisma.video.create({
+          data: {
+            id: contentId,
+            userId,
+            title: file.originalname,
+            description: file.originalname,
+            thumbnailUrl: thumbnailName,
+            duration: Math.min(Math.round(duration), 30),
+            views: 0,
+            likeCount: 0,
+            tags: [],
+            url: this.getFullUrl(finalFileName)
+          }
+        });
+        logger.info(`Video record created: ${createdVideo.id}`);
+      } catch (error) {
+        throw new Error(`Failed to create video record: ${error.message}`);
+      }
 
-      // Only cache in Redis after successful database creation
+      // Cache video metadata in Redis
       const videoMetadata = {
         id: createdVideo.id,
         title: createdVideo.title,
@@ -279,28 +233,38 @@ class VideoService {
         createdAt: createdVideo.createdAt
       };
 
-      // Cache video metadata in Redis
       await redisClient.set(
         redisKey,
         JSON.stringify(videoMetadata),
         'EX',
-        3600
+        CACHE_DURATION
       );
 
-      // Return the metadata
+      // Clean up temporary files
+      try {
+        if (finalVideoPath !== filePath) {
+          await fs.unlink(finalVideoPath);
+        }
+        await fs.unlink(filePath);
+        await fs.unlink(thumbnailPath);
+      } catch (error) {
+        logger.error('Error cleaning up temporary files:', error);
+      }
+
       return videoMetadata;
+
     } catch (error) {
-      console.error('Error in uploadVideo:', error);
+      logger.error('Error in uploadVideo:', error);
       
-      // Rollback: Delete uploaded files from MinIO
+      // Rollback: Delete uploaded files from storage
       if (contentId && uploadedFiles.length > 0) {
         try {
           await Promise.all(uploadedFiles.map(fileName => 
-            minioClient.removeObject(this.bucketName, fileName)
+            storageClient.deleteFile(fileName)
           ));
-          console.log('Successfully rolled back uploaded files');
+          logger.info('Successfully rolled back uploaded files');
         } catch (rollbackError) {
-          console.error('Error during rollback of uploaded files:', rollbackError);
+          logger.error('Error during rollback of uploaded files:', rollbackError);
         }
       }
 
@@ -310,9 +274,9 @@ class VideoService {
           await prisma.video.delete({
             where: { id: contentId }
           });
-          console.log('Successfully rolled back database record');
+          logger.info('Successfully rolled back database record');
         } catch (rollbackError) {
-          console.error('Error during rollback of database record:', rollbackError);
+          logger.error('Error during rollback of database record:', rollbackError);
         }
       }
 
@@ -320,9 +284,9 @@ class VideoService {
       if (redisKey) {
         try {
           await redisClient.del(redisKey);
-          console.log('Successfully cleared Redis cache');
+          logger.info('Successfully cleared Redis cache');
         } catch (rollbackError) {
-          console.error('Error during rollback of Redis cache:', rollbackError);
+          logger.error('Error during rollback of Redis cache:', rollbackError);
         }
       }
 
@@ -450,24 +414,6 @@ class VideoService {
     }
   }
 
-  async preloadVideo(videoId) {
-    try {
-      const video = await this.getVideoMetadata(videoId);
-      
-      // Preload video URL to Redis
-      await redisClient.set(
-        `preload:${videoId}`,
-        video.url,
-        'EX',
-        3600
-      );
-
-      return video;
-    } catch (error) {
-      throw new Error(`Error preloading video: ${error.message}`);
-    }
-  }
-
   async getVideoStream(videoId) {
     try {
       const video = await this.getVideoMetadata(videoId);
@@ -476,82 +422,129 @@ class VideoService {
         throw new Error('Video metadata not found or invalid');
       }
 
-      // Log the file path for debugging
-      console.log('Attempting to get video with path:', video.videoUrl);
-
-      // Verify the file exists in MinIO
-      try {
-        const filePath = this.extractFilePath(video.videoUrl);
-        await minioClient.statObject(this.bucketName, filePath);
-      } catch (error) {
-        // If file doesn't exist in MinIO, clear the cache and throw error
-        await redisClient.del(`video:${videoId}`);
-        throw new Error(`Video file not found in storage: ${error.message}`);
-      }
-
-      // Get video stream from MinIO using the file path
+      // Get video stream from storage
       const filePath = this.extractFilePath(video.videoUrl);
-      const stream = await minioClient.getObject(
-        this.bucketName,
-        filePath
-      );
-
-      return stream;
+      return await storageClient.getFile(this.bucketName, filePath);
     } catch (error) {
-      console.error('Error in getVideoStream:', error);
+      logger.error('Error in getVideoStream:', error);
       throw new Error(`Error getting video stream: ${error.message}`);
     }
   }
 
-  async trimVideo(inputPath, maxDuration = 30) {
+  async deleteVideo(videoId) {
     try {
-      // Get video duration
-      const duration = await new Promise((resolve, reject) => {
-        ffmpeg.ffprobe(inputPath, (err, metadata) => {
-          if (err) reject(err);
-          else resolve(metadata.format.duration);
-        });
+      const video = await prisma.video.findUnique({
+        where: { id: videoId }
       });
 
-      console.info(`Trimming video from ${duration} seconds to ${maxDuration} seconds`);
-
-      // Create output path with timestamp to avoid conflicts
-      const timestamp = Date.now();
-      const outputPath = path.join(os.tmpdir(), `trimmed-${timestamp}.mp4`);
-
-      // Trim video if it's longer than maxDuration
-      if (duration > maxDuration) {
-        await new Promise((resolve, reject) => {
-          ffmpeg(inputPath)
-            .setDuration(maxDuration)
-            .output(outputPath)
-            .on('end', resolve)
-            .on('error', reject)
-            .run();
-        });
-
-        // Upload trimmed video to MinIO
-        const fileName = path.basename(inputPath);
-        const trimmedFileName = `trimmed-${fileName}`;
-        await minioClient.fPutObject(
-          this.bucketName,
-          trimmedFileName,
-          outputPath
-        );
-
-        // Clean up temporary file
-        await fs.unlink(outputPath);
-
-        return trimmedFileName;
+      if (!video) {
+        throw new Error('Video not found');
       }
 
-      return path.basename(inputPath);
+      const filePath = this.extractFilePath(video.url);
+      await storageClient.deleteFile(this.bucketName, filePath);
+      await prisma.video.delete({ where: { id: videoId } });
+      logger.info(`Video ${videoId} deleted successfully`);
     } catch (error) {
-      console.error('Error in trimVideo:', error);
-      throw new Error(`Error trimming video: ${error.message}`);
+      logger.error('Error deleting video:', error);
+      throw error;
+    }
+  }
+
+  async streamVideo(videoId) {
+    try {
+      // Try to get video from Redis cache first
+      const cachedVideo = await redisClient.get(`video:${videoId}`);
+      if (cachedVideo) {
+        logger.info(`Video ${videoId} found in Redis cache`);
+        return JSON.parse(cachedVideo);
+      }
+
+      const video = await prisma.video.findUnique({
+        where: { id: videoId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              profileImage: true
+            }
+          }
+        }
+      });
+
+      if (!video) {
+        throw new Error('Video not found');
+      }
+
+      // Get video stream from S3/MinIO
+      const bucket = process.env.NODE_ENV === 'development' ? 'videos' : process.env.S3_BUCKET_VALIDATION;
+      const command = new GetObjectCommand({
+        Bucket: bucket,
+        Key: video.fileKey
+      });
+
+      const videoStream = await storageClient.send(command);
+
+      // Cache video metadata in Redis
+      await redisClient.set(
+        `video:${videoId}`,
+        JSON.stringify(video),
+        'EX',
+        CACHE_DURATION
+      );
+
+      return {
+        video,
+        stream: videoStream.Body
+      };
+    } catch (error) {
+      logger.error('Error streaming video:', error);
+      throw error;
+    }
+  }
+
+  async getVideoFeed(page = 1, limit = 10) {
+    try {
+      const skip = (page - 1) * limit;
+      
+      // Try to get feed from Redis cache
+      const cacheKey = `feed:${page}:${limit}`;
+      const cachedFeed = await redisClient.get(cacheKey);
+      if (cachedFeed) {
+        logger.info(`Feed page ${page} found in Redis cache`);
+        return JSON.parse(cachedFeed);
+      }
+
+      const videos = await prisma.video.findMany({
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              profileImage: true
+            }
+          }
+        }
+      });
+
+      // Cache feed in Redis
+      await redisClient.set(
+        cacheKey,
+        JSON.stringify(videos),
+        'EX',
+        CACHE_DURATION
+      );
+
+      return videos;
+    } catch (error) {
+      logger.error('Error getting video feed:', error);
+      throw error;
     }
   }
 }
 
-// Export the class instead of an instance
-module.exports = VideoService; 
+module.exports = new VideoService(); 

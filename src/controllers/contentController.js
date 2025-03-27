@@ -1,5 +1,6 @@
 const prisma = require('../configs/database');
-const minioClient = require('../configs/minio');
+const storageClient = require('../configs/storage');
+const { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const tokenService = require('../services/tokenService');
 const gamificationService = require('../services/gamificationService');
 const logger = require('../utils/logger');
@@ -17,14 +18,29 @@ class ContentController {
       const { title, description } = req.body;
       const userId = req.user.id;
 
-      // Upload to MinIO
+      // Upload to storage
       const videoKey = `videos/${userId}/${Date.now()}-${req.file.originalname}`;
-      await minioClient.putObject(
-        process.env.MINIO_BUCKET_NAME,
-        videoKey,
-        req.file.buffer,
-        req.file.size
-      );
+      const bucketName = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation' 
+        ? process.env.S3_BUCKET_VALIDATION 
+        : process.env.MINIO_BUCKET_NAME;
+
+      if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
+        // Use S3
+        await storageClient.send(new PutObjectCommand({
+          Bucket: bucketName,
+          Key: videoKey,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype
+        }));
+      } else {
+        // Use MinIO
+        await storageClient.putObject(
+          bucketName,
+          videoKey,
+          req.file.buffer,
+          req.file.size
+        );
+      }
 
       // Create video record
       const video = await prisma.video.create({
@@ -52,15 +68,16 @@ class ContentController {
             title: video.title,
             description: video.description,
             videoUrl: video.videoUrl,
-            tokenReward: video.tokenReward
+            tokenReward: video.tokenReward,
+            createdAt: video.createdAt
           }
         }
       });
     } catch (error) {
-      logger.error(`Video upload error: ${error.message}`);
+      logger.error('Error uploading video:', error);
       res.status(500).json({
         status: 'error',
-        message: error.message
+        message: 'Failed to upload video'
       });
     }
   }
@@ -114,10 +131,8 @@ class ContentController {
   async streamVideo(req, res) {
     try {
       const { videoId } = req.params;
-      const userId = req.user.id;
-
       const video = await prisma.video.findUnique({
-        where: { id: videoId }
+        where: { id: parseInt(videoId) }
       });
 
       if (!video) {
@@ -127,36 +142,29 @@ class ContentController {
         });
       }
 
-      // Get video stream from MinIO
-      const videoStream = await minioClient.getObject(
-        process.env.MINIO_BUCKET_NAME,
-        video.videoUrl
-      );
+      const bucketName = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation' 
+        ? process.env.S3_BUCKET_VALIDATION 
+        : process.env.MINIO_BUCKET_NAME;
 
-      // Set response headers
-      res.setHeader('Content-Type', 'video/mp4');
-      res.setHeader('Content-Length', videoStream.length);
-
-      // Update video views
-      await prisma.video.update({
-        where: { id: videoId },
-        data: {
-          views: {
-            increment: 1
-          }
-        }
-      });
-
-      // Award tokens for watching
-      await tokenService.earnTokens(userId, 1, videoId);
-
-      // Stream video
-      videoStream.pipe(res);
+      if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
+        // Use S3
+        const command = new GetObjectCommand({
+          Bucket: bucketName,
+          Key: video.videoUrl
+        });
+        const response = await storageClient.send(command);
+        res.setHeader('Content-Type', response.ContentType);
+        response.Body.pipe(res);
+      } else {
+        // Use MinIO
+        const stream = await storageClient.getObject(bucketName, video.videoUrl);
+        stream.pipe(res);
+      }
     } catch (error) {
-      logger.error(`Video stream error: ${error.message}`);
+      logger.error('Error streaming video:', error);
       res.status(500).json({
         status: 'error',
-        message: error.message
+        message: 'Failed to stream video'
       });
     }
   }
@@ -211,7 +219,7 @@ class ContentController {
       const userId = req.user.id;
 
       const video = await prisma.video.findUnique({
-        where: { id: videoId }
+        where: { id: parseInt(videoId) }
       });
 
       if (!video) {
@@ -228,28 +236,36 @@ class ContentController {
         });
       }
 
-      // Delete from MinIO
-      await minioClient.removeObject(
-        process.env.MINIO_BUCKET_NAME,
-        video.videoUrl
-      );
+      const bucketName = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation' 
+        ? process.env.S3_BUCKET_VALIDATION 
+        : process.env.MINIO_BUCKET_NAME;
 
-      // Delete from database
+      if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
+        // Use S3
+        await storageClient.send(new DeleteObjectCommand({
+          Bucket: bucketName,
+          Key: video.videoUrl
+        }));
+      } else {
+        // Use MinIO
+        await storageClient.removeObject(bucketName, video.videoUrl);
+      }
+
       await prisma.video.delete({
-        where: { id: videoId }
+        where: { id: parseInt(videoId) }
       });
 
       logger.info(`Video deleted: ${videoId} by user ${userId}`);
 
-      res.json({
+      res.status(200).json({
         status: 'success',
         message: 'Video deleted successfully'
       });
     } catch (error) {
-      logger.error(`Video deletion error: ${error.message}`);
+      logger.error('Error deleting video:', error);
       res.status(500).json({
         status: 'error',
-        message: error.message
+        message: 'Failed to delete video'
       });
     }
   }
