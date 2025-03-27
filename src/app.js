@@ -29,17 +29,8 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      process.env.FRONTEND_URL,
-      'https://world-social-jlmnskyz0-italogouveias-projects.vercel.app',
-      'https://world-social.vercel.app'
-    ];
-    
-    // Allow any Vercel preview deployment
-    if (origin.match(/https:\/\/world-social.*\.vercel\.app$/) ||
-        allowedOrigins.includes(origin)) {
+    // Allow all Vercel domains
+    if (origin.match(/\.vercel\.app$/) || origin === 'http://localhost:3001') {
       callback(null, true);
     } else {
       // Log the rejected origin for debugging
@@ -51,7 +42,9 @@ const corsOptions = {
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept', 'Origin', 'X-Requested-With'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400 // 24 hours
+  maxAge: 86400, // 24 hours
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
 const io = new Server(httpServer, {
@@ -103,10 +96,10 @@ app.use(helmet({
   }
 }));
 
-// Apply CORS middleware
+// Apply CORS middleware before other middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests
+// Handle preflight requests explicitly
 app.options('*', cors(corsOptions));
 
 // Only parse JSON for non-multipart requests
