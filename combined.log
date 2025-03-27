@@ -1761,3 +1761,17 @@
 {"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743022717193 for 5 seconds","timestamp":"2025-03-27T05:02:41.619Z"}
 {"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743022717193 for 5 seconds","timestamp":"2025-03-27T05:02:52.543Z"}
 {"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743022717193 for 5 seconds","timestamp":"2025-03-27T05:03:03.456Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T05:29:58.553Z"}
+{"level":"info","message":"Redis client connected","timestamp":"2025-03-27T05:29:58.603Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T05:29:58.605Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T05:29:58.622Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T05:29:58.623Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T05:29:58.626Z"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T05:29:58.628Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T05:30:51.830Z"}
+{"level":"info","message":"Redis client connected","timestamp":"2025-03-27T05:30:51.900Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T05:30:51.903Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T05:30:51.932Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T05:30:51.934Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T05:30:51.939Z"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T05:30:51.943Z"}

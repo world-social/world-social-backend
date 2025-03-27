@@ -113,6 +113,11 @@ app.get('/', (req, res) => {
   });
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' })
+})
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/content', require('./routes/content'));
