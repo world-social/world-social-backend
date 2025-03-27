@@ -23,42 +23,6 @@ const app = express();
 const prisma = new PrismaClient();
 const httpServer = createServer(app);
 
-// CORS configuration
-const corsOptions = {
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) {
-      console.log('No origin provided - allowing request');
-      return callback(null, true);
-    }
-    
-    // Log all incoming origins for debugging
-    console.log('Incoming request origin:', origin);
-    
-    // Allow all Vercel domains and localhost
-    if (origin.match(/\.vercel\.app$/) || 
-        origin === 'http://localhost:3000' || 
-        origin === 'http://localhost:3001') {
-      console.log('Origin allowed:', origin);
-      callback(null, true);
-    } else {
-      console.log('Origin rejected:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept', 'Origin', 'X-Requested-With', 'Access-Control-Allow-Origin'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400, // 24 hours
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-};
-
-const io = new Server(httpServer, {
-  cors: corsOptions
-});
-
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -83,32 +47,71 @@ const upload = multer({
   }
 });
 
+// CORS configuration
+const corsOptions = {
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Log the origin for debugging
+    console.log('Request origin:', origin);
+    
+    // Allow all Railway domains and localhost
+    const allowedOrigins = [
+      'https://world-social-front-validation.up.railway.app',
+      'https://world-social-front-production.up.railway.app',
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://world-social-front.railway.internal'
+    ];
+    
+    if (allowedOrigins.includes(origin) || origin.endsWith('.railway.app')) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept', 'Origin', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  optionsSuccessStatus: 204,
+  maxAge: 86400
+};
+
+// Apply CORS middleware first
+app.use(cors(corsOptions));
+
+// Handle OPTIONS requests explicitly
+app.options('*', cors(corsOptions));
+
+// Configure Socket.IO with the same CORS options
+const io = new Server(httpServer, {
+  cors: corsOptions
+});
+
+// Configure trust proxy for Railway
+app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
+
 // Middleware
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginResourcePolicy: false,
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: false,
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      connectSrc: ["'self'", "https://world-social-backend-production.up.railway.app", "https://*.vercel.app", "wss://world-social-backend-production.up.railway.app"],
+      connectSrc: ["'self'", "*.railway.app", "*.railway.internal", "http://localhost:*", "https://*.railway.internal"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       fontSrc: ["'self'", "data:", "https:"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'", "https:", "blob:"],
-      frameSrc: ["'self'", "https:"],
-      upgradeInsecureRequests: []
+      frameSrc: ["'self'", "https:"]
     }
   }
 }));
-
-// Apply CORS middleware before any other middleware
-app.use(cors(corsOptions));
-
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
 
 // Only parse JSON for non-multipart requests
 app.use((req, res, next) => {
@@ -123,14 +126,18 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 1000, // limit each IP to 1000 requests per windowMs
+  windowMs: 1 * 60 * 1000,
+  max: 1000,
   message: {
     status: 'error',
     error: 'Rate limit exceeded. Please try again later.'
   },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const xForwardedFor = req.headers['x-forwarded-for'];
+    return xForwardedFor ? xForwardedFor.split(',')[0].trim() : req.ip;
+  }
 });
 
 // Apply rate limiting to all routes except static files
