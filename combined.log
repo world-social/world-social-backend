@@ -1775,3 +1775,67 @@
 {"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T05:30:51.934Z"}
 {"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T05:30:51.939Z"}
 {"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T05:30:51.943Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T14:44:30.109Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T14:44:40.662Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T14:46:20.095Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T14:47:14.095Z"}
+{"level":"info","message":"Redis client connected","timestamp":"2025-03-27T14:47:14.140Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T14:47:14.145Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T14:47:14.193Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T14:47:14.194Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T14:47:14.196Z"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T14:47:14.198Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743022717193 for 5 seconds","timestamp":"2025-03-27T14:54:41.234Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743022717193 for 5 seconds","timestamp":"2025-03-27T14:54:51.696Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743022717193 for 5 seconds","timestamp":"2025-03-27T14:55:02.715Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743007814590 for 5 seconds","timestamp":"2025-03-27T14:55:14.964Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743007814590 for 5 seconds","timestamp":"2025-03-27T14:55:21.118Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T14:57:11.850Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T14:57:11.851Z"}
+{"level":"info","message":"Video duration: 32.693696 seconds","timestamp":"2025-03-27T14:57:13.892Z"}
+{"level":"info","message":"Successfully uploaded fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851/cavaleiros_meme-thumb.jpg to worldsocial-videos","timestamp":"2025-03-27T14:57:18.403Z"}
+{"level":"info","message":"Successfully uploaded fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851/trimmed-cavaleiros_meme.mp4 to worldsocial-videos","timestamp":"2025-03-27T14:57:18.445Z"}
+{"level":"info","message":"Video uploaded successfully: fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851/trimmed-cavaleiros_meme.mp4","timestamp":"2025-03-27T14:57:18.446Z"}
+{"level":"info","message":"Video record created: fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851","timestamp":"2025-03-27T14:57:18.476Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T14:58:56.615Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T14:59:02.786Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T14:59:08.994Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T14:59:19.540Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T14:59:25.688Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T14:59:31.844Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T14:59:38.063Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T14:59:44.314Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T14:59:50.499Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T14:59:56.709Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:00:02.882Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:00:10.297Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:00:21.318Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:00:27.509Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:00:33.734Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:00:39.920Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:00:46.060Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:00:52.259Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:00:58.408Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:01:04.610Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:01:10.813Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:01:21.542Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:01:27.755Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:01:33.927Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:01:40.081Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:01:46.271Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:01:52.427Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:01:58.629Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:02:04.834Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:02:11.038Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:02:21.762Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:02:27.958Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:02:34.161Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:02:40.365Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:02:46.565Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:02:52.748Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:02:58.956Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:03:05.097Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:03:11.291Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:03:21.962Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:03:28.178Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743087431851 for 5 seconds","timestamp":"2025-03-27T15:03:34.350Z"}

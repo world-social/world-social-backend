@@ -25,8 +25,24 @@ const prisma = new PrismaClient();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: [process.env.CORS_ORIGINS || 'http://localhost:3000', 'http://localhost:3001'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+    origin: function(origin, callback) {
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        process.env.FRONTEND_URL
+      ];
+      
+      if (origin && (
+        origin.match(/https:\/\/world-social.*\.vercel\.app$/) ||
+        allowedOrigins.includes(origin)
+      )) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true
   }
 });
 
@@ -60,18 +76,39 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: false
 }));
-app.use(cors({
-  origin: [
-    'https://world-social-ms040ms2k-italogouveias-projects.vercel.app',
-    'https://world-social-*-italogouveias-projects.vercel.app',
-    'https://world-social-*-italogouveias.vercel.app',
-    process.env.FRONTEND_URL || 'http://localhost:3000',
-    'http://localhost:3001'
-  ],
+
+// CORS configuration
+const corsOptions = {
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      process.env.FRONTEND_URL
+    ];
+    
+    // Allow any Vercel preview deployment
+    if (origin.match(/https:\/\/world-social.*\.vercel\.app$/) ||
+        allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // 24 hours
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // Only parse JSON for non-multipart requests
 app.use((req, res, next) => {
