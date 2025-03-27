@@ -15,7 +15,6 @@ const path = require('path');
 const os = require('os');
 const morgan = require('morgan');
 const { errorHandler } = require('./middleware/errorHandler');
-const { corsOptions } = require('./configs/cors');
 const { rateLimitConfig } = require('./configs/rateLimit');
 const { connectRedis } = require('./configs/redis');
 
@@ -23,27 +22,36 @@ const { connectRedis } = require('./configs/redis');
 const app = express();
 const prisma = new PrismaClient();
 const httpServer = createServer(app);
+
+// CORS configuration
+const corsOptions = {
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      process.env.FRONTEND_URL
+    ];
+    
+    // Allow any Vercel preview deployment
+    if (origin.match(/https:\/\/world-social.*\.vercel\.app$/) ||
+        allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // 24 hours
+};
+
 const io = new Server(httpServer, {
-  cors: {
-    origin: function(origin, callback) {
-      const allowedOrigins = [
-        'http://localhost:3000',
-        'http://localhost:3001',
-        process.env.FRONTEND_URL
-      ];
-      
-      if (origin && (
-        origin.match(/https:\/\/world-social.*\.vercel\.app$/) ||
-        allowedOrigins.includes(origin)
-      )) {
-        callback(null, true);
-      } else {
-        callback(null, false);
-      }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    credentials: true
-  }
+  cors: corsOptions
 });
 
 // Configure multer for file uploads
@@ -76,33 +84,6 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: false
 }));
-
-// CORS configuration
-const corsOptions = {
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      process.env.FRONTEND_URL
-    ];
-    
-    // Allow any Vercel preview deployment
-    if (origin.match(/https:\/\/world-social.*\.vercel\.app$/) ||
-        allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400 // 24 hours
-};
 
 // Apply CORS middleware
 app.use(cors(corsOptions));
