@@ -41,8 +41,8 @@ class VideoService {
 
   async connectRedis() {
     try {
-      if (!redisClient.isOpen) {
-        await redisClient.connect();
+    if (!redisClient.isOpen) {
+      await redisClient.connect();
         logger.info('Redis connected successfully');
       }
     } catch (error) {
@@ -113,7 +113,7 @@ class VideoService {
       let duration;
       try {
         duration = await new Promise((resolve, reject) => {
-          ffmpeg.ffprobe(filePath, (err, metadata) => {
+        ffmpeg.ffprobe(filePath, (err, metadata) => {
             if (err) {
               logger.error('ffprobe error:', err);
               reject(new Error(`Failed to get video duration: ${err.message}`));
@@ -137,17 +137,17 @@ class VideoService {
       // Trim video if it's longer than 30 seconds
       if (duration > 30) {
         try {
-          await new Promise((resolve, reject) => {
-            ffmpeg(filePath)
-              .setDuration(30)
-              .output(outputPath)
+        await new Promise((resolve, reject) => {
+          ffmpeg(filePath)
+            .setDuration(30)
+            .output(outputPath)
               .on('end', resolve)
-              .on('error', (err) => {
+            .on('error', (err) => {
                 logger.error('Error during trimming:', err);
-                reject(new Error(`Failed to trim video: ${err.message}`));
-              })
-              .run();
-          });
+              reject(new Error(`Failed to trim video: ${err.message}`));
+            })
+            .run();
+        });
 
           // Verify the trimmed file
           await fs.access(outputPath);
@@ -167,20 +167,20 @@ class VideoService {
       const thumbnailPath = path.join(tempDir, `thumb-${timestamp}.jpg`);
       
       try {
-        await new Promise((resolve, reject) => {
-          ffmpeg(finalVideoPath)
-            .screenshots({
-              timestamps: ['50%'],
-              filename: path.basename(thumbnailPath),
-              folder: path.dirname(thumbnailPath),
-              size: '320x240'
-            })
+      await new Promise((resolve, reject) => {
+        ffmpeg(finalVideoPath)
+          .screenshots({
+            timestamps: ['50%'],
+            filename: path.basename(thumbnailPath),
+            folder: path.dirname(thumbnailPath),
+            size: '320x240'
+          })
             .on('end', resolve)
-            .on('error', (err) => {
+          .on('error', (err) => {
               logger.error('Error generating thumbnail:', err);
-              reject(new Error(`Failed to generate thumbnail: ${err.message}`));
-            });
-        });
+            reject(new Error(`Failed to generate thumbnail: ${err.message}`));
+          });
+      });
 
         // Upload thumbnail to storage
         const thumbnailBuffer = await fs.readFile(thumbnailPath);
@@ -357,12 +357,12 @@ class VideoService {
         tags: video.tags || []
       }));
 
-      return {
+          return {
         videos: transformedVideos,
         nextCursor,
         hasMore
-      };
-    } catch (error) {
+          };
+        } catch (error) {
       logger.error('Error fetching video feed:', error);
       throw error;
     }

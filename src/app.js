@@ -25,7 +25,7 @@ const prisma = new PrismaClient();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: [process.env.FRONTEND_URL || 'http://localhost:3000', 'http://localhost:3001'],
+    origin: [process.env.CORS_ORIGINS || 'http://localhost:3000', 'http://localhost:3001'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
   }
 });
