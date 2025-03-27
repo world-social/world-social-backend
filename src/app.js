@@ -61,9 +61,16 @@ app.use(helmet({
   crossOriginOpenerPolicy: false
 }));
 app.use(cors({
-  origin: [process.env.FRONTEND_URL || 'http://localhost:3000', 'http://localhost:3001'],
+  origin: [
+    'https://world-social-ms040ms2k-italogouveias-projects.vercel.app',
+    'https://world-social-*-italogouveias-projects.vercel.app',
+    'https://world-social-*-italogouveias.vercel.app',
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'http://localhost:3001'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  credentials: true
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key']
 }));
 
 // Only parse JSON for non-multipart requests
