@@ -1648,3 +1648,116 @@
 {"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T03:48:44.904Z"}
 {"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T03:48:44.906Z"}
 {"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T03:48:44.908Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T04:07:37.362Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T04:07:37.363Z"}
+{"level":"info","message":"Video duration: 10.820499 seconds","timestamp":"2025-03-27T04:07:38.508Z"}
+{"level":"info","message":"Successfully uploaded fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743048457364/Arriba_Arriba_Andale_Arriba_-_Yeppa-thumb.jpg to worldsocial-videos","timestamp":"2025-03-27T04:07:40.065Z"}
+{"level":"info","message":"Successfully uploaded fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743048457364/Arriba_Arriba_Andale_Arriba_-_Yeppa.mp4 to worldsocial-videos","timestamp":"2025-03-27T04:07:40.144Z"}
+{"level":"info","message":"Video uploaded successfully: fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743048457364/Arriba_Arriba_Andale_Arriba_-_Yeppa.mp4","timestamp":"2025-03-27T04:07:40.145Z"}
+{"level":"info","message":"Video record created: fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743048457364","timestamp":"2025-03-27T04:07:40.183Z"}
+{"level":"error","message":"Error in uploadVideo: CACHE_DURATION is not defined","stack":"ReferenceError: CACHE_DURATION is not defined\n    at VideoService.uploadVideo (C:\\Users\\italo\\Downloads\\WorldSocial\\world-social-backend\\src\\services\\videoService.js:240:9)\n    at async C:\\Users\\italo\\Downloads\\WorldSocial\\world-social-backend\\src\\routes\\content.js:155:27","timestamp":"2025-03-27T04:07:40.185Z"}
+{"level":"info","message":"Successfully deleted fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743048457364/Arriba_Arriba_Andale_Arriba_-_Yeppa-thumb.jpg from worldsocial-videos","timestamp":"2025-03-27T04:07:40.254Z"}
+{"level":"info","message":"Successfully deleted fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743048457364/Arriba_Arriba_Andale_Arriba_-_Yeppa.mp4 from worldsocial-videos","timestamp":"2025-03-27T04:07:40.256Z"}
+{"level":"info","message":"Successfully rolled back uploaded files","timestamp":"2025-03-27T04:07:40.260Z"}
+{"level":"info","message":"Successfully rolled back database record","timestamp":"2025-03-27T04:07:40.288Z"}
+{"level":"info","message":"Successfully cleared Redis cache","timestamp":"2025-03-27T04:07:40.293Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T04:34:51.516Z"}
+{"level":"info","message":"Redis client connected","timestamp":"2025-03-27T04:34:53.278Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T04:34:53.280Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T04:34:53.329Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T04:34:53.329Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T04:34:53.332Z"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T04:34:53.337Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T04:37:12.410Z"}
+{"level":"info","message":"Redis client connected","timestamp":"2025-03-27T04:37:12.470Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T04:37:12.473Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T04:37:12.494Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T04:37:12.495Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T04:37:12.498Z"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T04:37:12.501Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T04:37:43.273Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T04:37:43.274Z"}
+{"level":"info","message":"Video duration: 10.820499 seconds","timestamp":"2025-03-27T04:37:45.487Z"}
+{"level":"info","message":"Successfully uploaded fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743050263276/Arriba_Arriba_Andale_Arriba_-_Yeppa-thumb.jpg to worldsocial-videos","timestamp":"2025-03-27T04:37:49.487Z"}
+{"level":"info","message":"Successfully uploaded fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743050263276/Arriba_Arriba_Andale_Arriba_-_Yeppa.mp4 to worldsocial-videos","timestamp":"2025-03-27T04:37:49.543Z"}
+{"level":"info","message":"Video uploaded successfully: fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743050263276/Arriba_Arriba_Andale_Arriba_-_Yeppa.mp4","timestamp":"2025-03-27T04:37:49.545Z"}
+{"level":"info","message":"Video record created: fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743050263276","timestamp":"2025-03-27T04:37:49.595Z"}
+{"level":"error","message":"Error in uploadVideo: CACHE_DURATION is not defined","stack":"ReferenceError: CACHE_DURATION is not defined\n    at VideoService.uploadVideo (C:\\Users\\italo\\Downloads\\WorldSocial\\world-social-backend\\src\\services\\videoService.js:240:9)\n    at async C:\\Users\\italo\\Downloads\\WorldSocial\\world-social-backend\\src\\routes\\content.js:155:27","timestamp":"2025-03-27T04:37:49.599Z"}
+{"level":"info","message":"Successfully deleted fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743050263276/Arriba_Arriba_Andale_Arriba_-_Yeppa-thumb.jpg from worldsocial-videos","timestamp":"2025-03-27T04:37:49.625Z"}
+{"level":"info","message":"Successfully deleted fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743050263276/Arriba_Arriba_Andale_Arriba_-_Yeppa.mp4 from worldsocial-videos","timestamp":"2025-03-27T04:37:49.628Z"}
+{"level":"info","message":"Successfully rolled back uploaded files","timestamp":"2025-03-27T04:37:49.629Z"}
+{"level":"info","message":"Successfully rolled back database record","timestamp":"2025-03-27T04:37:49.644Z"}
+{"level":"info","message":"Successfully cleared Redis cache","timestamp":"2025-03-27T04:37:49.651Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T04:38:41.315Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T04:38:41.355Z"}
+{"level":"info","message":"Video duration: 7.639365 seconds","timestamp":"2025-03-27T04:38:42.056Z"}
+{"level":"info","message":"Successfully uploaded fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743050321358/CARALHOOOOO-thumb.jpg to worldsocial-videos","timestamp":"2025-03-27T04:38:43.294Z"}
+{"level":"info","message":"Successfully uploaded fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743050321358/CARALHOOOOO.mp4 to worldsocial-videos","timestamp":"2025-03-27T04:38:43.416Z"}
+{"level":"info","message":"Video uploaded successfully: fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743050321358/CARALHOOOOO.mp4","timestamp":"2025-03-27T04:38:43.417Z"}
+{"level":"info","message":"Video record created: fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743050321358","timestamp":"2025-03-27T04:38:43.427Z"}
+{"level":"error","message":"Error in uploadVideo: CACHE_DURATION is not defined","stack":"ReferenceError: CACHE_DURATION is not defined\n    at VideoService.uploadVideo (C:\\Users\\italo\\Downloads\\WorldSocial\\world-social-backend\\src\\services\\videoService.js:240:9)\n    at async C:\\Users\\italo\\Downloads\\WorldSocial\\world-social-backend\\src\\routes\\content.js:155:27","timestamp":"2025-03-27T04:38:43.428Z"}
+{"level":"info","message":"Successfully deleted fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743050321358/CARALHOOOOO-thumb.jpg from worldsocial-videos","timestamp":"2025-03-27T04:38:43.445Z"}
+{"level":"info","message":"Successfully deleted fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743050321358/CARALHOOOOO.mp4 from worldsocial-videos","timestamp":"2025-03-27T04:38:43.448Z"}
+{"level":"info","message":"Successfully rolled back uploaded files","timestamp":"2025-03-27T04:38:43.449Z"}
+{"level":"info","message":"Successfully rolled back database record","timestamp":"2025-03-27T04:38:43.457Z"}
+{"level":"info","message":"Successfully cleared Redis cache","timestamp":"2025-03-27T04:38:43.462Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T04:50:41.741Z"}
+{"level":"info","message":"Redis client connected","timestamp":"2025-03-27T04:50:41.787Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T04:50:41.789Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T04:50:41.806Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T04:50:41.807Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T04:50:41.810Z"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T04:50:41.812Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T04:50:58.160Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T04:50:58.161Z"}
+{"level":"info","message":"Video duration: 7.639365 seconds","timestamp":"2025-03-27T04:50:59.258Z"}
+{"level":"info","message":"Successfully uploaded fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051058161/CARALHOOOOO-thumb.jpg to worldsocial-videos","timestamp":"2025-03-27T04:51:01.204Z"}
+{"level":"info","message":"Successfully uploaded fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051058161/CARALHOOOOO.mp4 to worldsocial-videos","timestamp":"2025-03-27T04:51:01.252Z"}
+{"level":"info","message":"Video uploaded successfully: fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051058161/CARALHOOOOO.mp4","timestamp":"2025-03-27T04:51:01.254Z"}
+{"level":"info","message":"Video record created: fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051058161","timestamp":"2025-03-27T04:51:01.285Z"}
+{"level":"error","message":"Error in uploadVideo: CACHE_DURATION is not defined","stack":"ReferenceError: CACHE_DURATION is not defined\n    at VideoService.uploadVideo (C:\\Users\\italo\\Downloads\\WorldSocial\\world-social-backend\\src\\services\\videoService.js:240:9)\n    at async C:\\Users\\italo\\Downloads\\WorldSocial\\world-social-backend\\src\\routes\\content.js:155:27","timestamp":"2025-03-27T04:51:01.288Z"}
+{"level":"info","message":"Successfully deleted fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051058161/CARALHOOOOO-thumb.jpg from worldsocial-videos","timestamp":"2025-03-27T04:51:01.299Z"}
+{"level":"info","message":"Successfully deleted fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051058161/CARALHOOOOO.mp4 from worldsocial-videos","timestamp":"2025-03-27T04:51:01.301Z"}
+{"level":"info","message":"Successfully rolled back uploaded files","timestamp":"2025-03-27T04:51:01.302Z"}
+{"level":"info","message":"Successfully rolled back database record","timestamp":"2025-03-27T04:51:01.313Z"}
+{"level":"info","message":"Successfully cleared Redis cache","timestamp":"2025-03-27T04:51:01.316Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T04:54:13.780Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T04:54:13.781Z"}
+{"level":"info","message":"Video duration: 0.882358 seconds","timestamp":"2025-03-27T04:54:14.900Z"}
+{"level":"info","message":"Successfully uploaded fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051253782/Caralho_Cuz__o-thumb.jpg to worldsocial-videos","timestamp":"2025-03-27T04:54:16.450Z"}
+{"level":"info","message":"Successfully uploaded fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051253782/Caralho_Cuz__o.mp4 to worldsocial-videos","timestamp":"2025-03-27T04:54:16.486Z"}
+{"level":"info","message":"Video uploaded successfully: fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051253782/Caralho_Cuz__o.mp4","timestamp":"2025-03-27T04:54:16.487Z"}
+{"level":"info","message":"Video record created: fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051253782","timestamp":"2025-03-27T04:54:16.501Z"}
+{"level":"error","message":"Error in uploadVideo: CACHE_DURATION is not defined","stack":"ReferenceError: CACHE_DURATION is not defined\n    at VideoService.uploadVideo (C:\\Users\\italo\\Downloads\\WorldSocial\\world-social-backend\\src\\services\\videoService.js:240:9)\n    at async C:\\Users\\italo\\Downloads\\WorldSocial\\world-social-backend\\src\\routes\\content.js:155:27","timestamp":"2025-03-27T04:54:16.502Z"}
+{"level":"info","message":"Successfully deleted fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051253782/Caralho_Cuz__o.mp4 from worldsocial-videos","timestamp":"2025-03-27T04:54:16.539Z"}
+{"level":"info","message":"Successfully deleted fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051253782/Caralho_Cuz__o-thumb.jpg from worldsocial-videos","timestamp":"2025-03-27T04:54:16.542Z"}
+{"level":"info","message":"Successfully rolled back uploaded files","timestamp":"2025-03-27T04:54:16.543Z"}
+{"level":"info","message":"Successfully rolled back database record","timestamp":"2025-03-27T04:54:16.559Z"}
+{"level":"info","message":"Successfully cleared Redis cache","timestamp":"2025-03-27T04:54:16.573Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T04:59:08.353Z"}
+{"level":"info","message":"Redis client connected","timestamp":"2025-03-27T04:59:08.405Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T04:59:08.408Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T04:59:08.455Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T04:59:08.456Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T04:59:08.458Z"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T04:59:08.461Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T05:00:32.673Z"}
+{"level":"info","message":"Redis client connected","timestamp":"2025-03-27T05:00:32.742Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T05:00:32.744Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T05:00:32.764Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T05:00:32.765Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T05:00:32.768Z"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T05:00:32.773Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T05:01:39.258Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T05:01:39.259Z"}
+{"level":"info","message":"Video duration: 0.882358 seconds","timestamp":"2025-03-27T05:01:39.610Z"}
+{"level":"info","message":"Successfully uploaded fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051699260/Caralho_Cuz__o-thumb.jpg to worldsocial-videos","timestamp":"2025-03-27T05:01:40.867Z"}
+{"level":"info","message":"Successfully uploaded fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051699260/Caralho_Cuz__o.mp4 to worldsocial-videos","timestamp":"2025-03-27T05:01:40.899Z"}
+{"level":"info","message":"Video uploaded successfully: fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051699260/Caralho_Cuz__o.mp4","timestamp":"2025-03-27T05:01:40.903Z"}
+{"level":"info","message":"Video record created: fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743051699260","timestamp":"2025-03-27T05:01:40.938Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743022717193 for 5 seconds","timestamp":"2025-03-27T05:02:09.077Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743022717193 for 5 seconds","timestamp":"2025-03-27T05:02:19.770Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743022717193 for 5 seconds","timestamp":"2025-03-27T05:02:30.770Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743022717193 for 5 seconds","timestamp":"2025-03-27T05:02:41.619Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743022717193 for 5 seconds","timestamp":"2025-03-27T05:02:52.543Z"}
+{"level":"info","message":"Rewarded 0.1 tokens to user fbb5f7f5-256d-42e3-b93f-3fcdfe822c07 for watching video fbb5f7f5-256d-42e3-b93f-3fcdfe822c07-1743022717193 for 5 seconds","timestamp":"2025-03-27T05:03:03.456Z"}

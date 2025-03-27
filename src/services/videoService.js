@@ -8,6 +8,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const logger = require('../utils/logger');
 const storageClient = require('../configs/storage');
+const { v4: uuidv4 } = require('uuid');
 
 // Initialize Redis client
 const redisClient = Redis.createClient({
@@ -237,7 +238,7 @@ class VideoService {
         redisKey,
         JSON.stringify(videoMetadata),
         'EX',
-        CACHE_DURATION
+        parseInt(process.env.CACHE_DURATION) || 3600 // Default to 1 hour if not set
       );
 
       // Clean up temporary files
@@ -491,7 +492,7 @@ class VideoService {
         `video:${videoId}`,
         JSON.stringify(video),
         'EX',
-        CACHE_DURATION
+        parseInt(process.env.CACHE_DURATION) || 3600 // Default to 1 hour if not set
       );
 
       return {
@@ -536,7 +537,7 @@ class VideoService {
         cacheKey,
         JSON.stringify(videos),
         'EX',
-        CACHE_DURATION
+        parseInt(process.env.CACHE_DURATION) || 3600 // Default to 1 hour if not set
       );
 
       return videos;

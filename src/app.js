@@ -13,6 +13,11 @@ const { authenticateToken } = require('./middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const os = require('os');
+const morgan = require('morgan');
+const { errorHandler } = require('./middleware/errorHandler');
+const { corsOptions } = require('./configs/cors');
+const { rateLimitConfig } = require('./configs/rateLimit');
+const { connectRedis } = require('./configs/redis');
 
 // Initialize Express app
 const app = express();
@@ -98,6 +103,15 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
   customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: "WorldSocial API Documentation"
 }));
+
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Server is healthy',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
