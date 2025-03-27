@@ -1930,3 +1930,24 @@
 {"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T16:02:10.588Z"}
 {"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T16:02:10.590Z"}
 {"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T16:02:10.593Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T16:09:18.255Z"}
+{"level":"info","message":"Redis client connected","timestamp":"2025-03-27T16:09:18.297Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T16:09:18.300Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T16:09:18.314Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T16:09:18.314Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T16:09:18.316Z"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T16:09:18.318Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T16:10:06.011Z"}
+{"level":"info","message":"Redis client connected","timestamp":"2025-03-27T16:10:06.047Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T16:10:06.050Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T16:10:06.062Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T16:10:06.062Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T16:10:06.064Z"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T16:10:06.066Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T16:10:41.520Z"}
+{"level":"info","message":"Redis client connected","timestamp":"2025-03-27T16:10:41.560Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T16:10:41.563Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T16:10:41.580Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T16:10:41.580Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T16:10:41.582Z"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T16:10:41.585Z"}
