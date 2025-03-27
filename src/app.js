@@ -32,7 +32,8 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:3001',
-      process.env.FRONTEND_URL
+      process.env.FRONTEND_URL,
+      'https://world-social-jlmnskyz0-italogouveias-projects.vercel.app'
     ];
     
     // Allow any Vercel preview deployment
