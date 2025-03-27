@@ -40,12 +40,14 @@ const corsOptions = {
         allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      // Log the rejected origin for debugging
+      console.log('Rejected origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept', 'Origin'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   maxAge: 86400 // 24 hours
 };
