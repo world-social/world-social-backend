@@ -1916,3 +1916,17 @@
 {"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T15:54:46.155Z"}
 {"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T15:54:46.157Z"}
 {"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T15:54:46.160Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T16:01:10.672Z"}
+{"level":"info","message":"Redis client connected","timestamp":"2025-03-27T16:01:10.715Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T16:01:10.717Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T16:01:10.729Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T16:01:10.729Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T16:01:10.731Z"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T16:01:10.733Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-03-27T16:02:10.537Z"}
+{"level":"info","message":"Redis client connected","timestamp":"2025-03-27T16:02:10.573Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T16:02:10.575Z"}
+{"level":"info","message":"Using existing MinIO bucket: worldsocial-videos","timestamp":"2025-03-27T16:02:10.588Z"}
+{"level":"info","message":"Bucket worldsocial-videos ready","timestamp":"2025-03-27T16:02:10.588Z"}
+{"level":"info","message":"Redis Client Connected","timestamp":"2025-03-27T16:02:10.590Z"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-03-27T16:02:10.593Z"}

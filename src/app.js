@@ -27,20 +27,28 @@ const httpServer = createServer(app);
 const corsOptions = {
   origin: function(origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('No origin provided - allowing request');
+      return callback(null, true);
+    }
     
-    // Allow all Vercel domains
-    if (origin.match(/\.vercel\.app$/) || origin === 'http://localhost:3001') {
+    // Log all incoming origins for debugging
+    console.log('Incoming request origin:', origin);
+    
+    // Allow all Vercel domains and localhost
+    if (origin.match(/\.vercel\.app$/) || 
+        origin === 'http://localhost:3000' || 
+        origin === 'http://localhost:3001') {
+      console.log('Origin allowed:', origin);
       callback(null, true);
     } else {
-      // Log the rejected origin for debugging
-      console.log('Rejected origin:', origin);
+      console.log('Origin rejected:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept', 'Origin', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept', 'Origin', 'X-Requested-With', 'Access-Control-Allow-Origin'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   maxAge: 86400, // 24 hours
   preflightContinue: false,
@@ -96,11 +104,20 @@ app.use(helmet({
   }
 }));
 
-// Apply CORS middleware before other middleware
+// Apply CORS middleware before any other middleware
 app.use(cors(corsOptions));
 
 // Handle preflight requests explicitly
 app.options('*', cors(corsOptions));
+
+// Add CORS headers to all responses
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key, Accept, Origin, X-Requested-With');
+  next();
+});
 
 // Only parse JSON for non-multipart requests
 app.use((req, res, next) => {
