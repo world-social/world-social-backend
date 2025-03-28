@@ -63,9 +63,11 @@ class VideoService {
   // Helper method to get full URL for a file
   getFullUrl(filePath) {
     if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
-      return `https://${this.bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${filePath}`;
+      const bucketName = process.env.AWS_BUCKET_NAME || 'worldsocial-videos';
+      return `https://${bucketName}.s3.${process.env.AWS_REGION || 'us-east-2'}.amazonaws.com/${filePath}`;
     } else {
-      return `http://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${this.bucketName}/${filePath}`;
+      const bucketName = process.env.MINIO_BUCKET || 'worldsocial-videos';
+      return `http://${process.env.MINIO_ENDPOINT || 'localhost'}:${process.env.MINIO_PORT || '9000'}/${bucketName}/${filePath}`;
     }
   }
 

@@ -13,7 +13,7 @@ class StorageAdapter {
         },
       });
       this.isS3 = true;
-      this.bucketName = process.env.S3_BUCKET_VALIDATION;
+      this.bucketName = process.env.AWS_BUCKET_NAME || 'worldsocial-videos';
     } else {
       this.client = new MinioClient({
         endPoint: process.env.MINIO_ENDPOINT,
@@ -23,7 +23,7 @@ class StorageAdapter {
         secretKey: process.env.MINIO_SECRET_KEY
       });
       this.isS3 = false;
-      this.bucketName = process.env.MINIO_BUCKET;
+      this.bucketName = process.env.MINIO_BUCKET || 'worldsocial-videos';
     }
   }
 
