@@ -25,11 +25,11 @@ COPY . .
 RUN npx prisma generate
 
 # Expose port
-EXPOSE 3000
+EXPOSE 8081
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000/health || exit 1
+    CMD curl -f http://localhost:8081/health || exit 1
 
 # Start the application with a wait for database
 CMD ["sh", "-c", "npx prisma migrate deploy && node src/app.js"] 

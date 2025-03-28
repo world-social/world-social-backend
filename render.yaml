@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: world-social-backend
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PORT
+        value: 3000
+      - key: CORS_ORIGIN
+        value: https://world-social.vercel.app
+    healthCheckPath: /api/health
+    autoDeploy: true
+    plan: free
+
+databases:
+  - name: worldsocial-db
+    databaseName: worldsocial
+    user: worldsocial
+    plan: free neverm

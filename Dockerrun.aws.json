@@ -1,0 +1,18 @@
+{
+  "AWSEBDockerrunVersion": "1",
+  "image": "node:18",
+  "command": "npm start",
+  "port": 8081,
+  "volumes": [],
+  "workingDir": "/var/app/current",
+  "environment": [
+    {
+      "name": "NODE_ENV",
+      "value": "production"
+    },
+    {
+      "name": "PORT",
+      "value": "8081"
+    }
+  ]
+} 
