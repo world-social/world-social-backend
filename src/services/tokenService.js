@@ -445,13 +445,12 @@ class TokenService {
         }
       }
 
-      // let signature = "";
       const wallet = new ethers.Wallet(process.env.BACKEND_PRIVATE_KEY);
       // Define the message to be signed. You can customize this payload as needed.
       const message = `DailyClaim:${userId}:${Date.now()}`;
       const signature = await wallet.signMessage(message);
 
-      console.log("Signature: ", signature);
+      logger.info("Generated signature for daily claim");
       
       // If user can collect, set next collection time to 24 hours from now
       return {
