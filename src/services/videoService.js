@@ -8,7 +8,6 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const logger = require('../utils/logger');
 const storageClient = require('../configs/storage');
-const { v4: uuidv4 } = require('uuid');
 
 // Initialize Redis client
 const redisClient = Redis.createClient({
@@ -184,7 +183,7 @@ class VideoService {
 
         // Upload thumbnail to storage
         const thumbnailBuffer = await fs.readFile(thumbnailPath);
-        await storageClient.uploadFile(thumbnailName, thumbnailBuffer);
+        await storageClient.uploadFile(this.bucketName, thumbnailName, thumbnailBuffer);
         uploadedFiles.push(thumbnailName);
       } catch (error) {
         logger.warn('Failed to generate/upload thumbnail:', error.message);
@@ -194,7 +193,7 @@ class VideoService {
       // Upload video to storage
       try {
         const fileBuffer = await fs.readFile(finalVideoPath);
-        await storageClient.uploadFile(finalFileName, fileBuffer);
+        await storageClient.uploadFile(this.bucketName, finalFileName, fileBuffer);
         uploadedFiles.push(finalFileName);
         logger.info(`Video uploaded successfully: ${finalFileName}`);
       } catch (error) {
@@ -238,7 +237,7 @@ class VideoService {
         redisKey,
         JSON.stringify(videoMetadata),
         'EX',
-        parseInt(process.env.CACHE_DURATION) || 3600 // Default to 1 hour if not set
+        CACHE_DURATION
       );
 
       // Clean up temporary files
@@ -261,7 +260,7 @@ class VideoService {
       if (contentId && uploadedFiles.length > 0) {
         try {
           await Promise.all(uploadedFiles.map(fileName => 
-            storageClient.deleteFile(fileName)
+            storageClient.deleteFile(this.bucketName, fileName)
           ));
           logger.info('Successfully rolled back uploaded files');
         } catch (rollbackError) {
@@ -478,14 +477,17 @@ class VideoService {
         throw new Error('Video not found');
       }
 
-      // Get video stream from S3/MinIO
-      const bucket = process.env.NODE_ENV === 'development' ? 'videos' : process.env.S3_BUCKET_VALIDATION;
-      const command = new GetObjectCommand({
-        Bucket: bucket,
-        Key: video.fileKey
-      });
-
-      const videoStream = await storageClient.send(command);
+      // Get video stream from storage
+      const filePath = this.extractFilePath(video.url);
+      let videoStream;
+      
+      if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
+        // For production, get stream directly from S3
+        videoStream = await storageClient.getFile(this.bucketName, filePath);
+      } else {
+        // For local development with MinIO
+        videoStream = await storageClient.getFile(this.bucketName, filePath);
+      }
 
       // Cache video metadata in Redis
       await redisClient.set(
@@ -497,11 +499,11 @@ class VideoService {
 
       return {
         video,
-        stream: videoStream.Body
+        stream: videoStream
       };
     } catch (error) {
-      logger.error('Error streaming video:', error);
-      throw error;
+      logger.error('Error in streamVideo:', error);
+      throw new Error(`Error streaming video: ${error.message}`);
     }
   }
 
@@ -537,7 +539,7 @@ class VideoService {
         cacheKey,
         JSON.stringify(videos),
         'EX',
-        parseInt(process.env.CACHE_DURATION) || 3600 // Default to 1 hour if not set
+        CACHE_DURATION
       );
 
       return videos;
