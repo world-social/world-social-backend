@@ -345,6 +345,7 @@ router.get('/daily/status', authenticateToken, async (req, res) => {
     res.json({
       status: 'success',
       data: {
+        signature: status.signature,
         canClaim: status.canCollect,
         nextClaimTime: status.nextCollectionTime ? status.nextCollectionTime.getTime() : null
       }
