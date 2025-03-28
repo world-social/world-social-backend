@@ -13,7 +13,7 @@ class StorageAdapter {
         },
       });
       this.isS3 = true;
-      this.bucketName = process.env.AWS_BUCKET_NAME || 'worldsocial-videos';
+      this.bucketName = process.env.AWS_BUCKET_NAME || 'socialworldworldcoin';
     } else {
       this.client = new MinioClient({
         endPoint: process.env.MINIO_ENDPOINT,

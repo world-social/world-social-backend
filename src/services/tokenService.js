@@ -462,9 +462,9 @@ class TokenService {
       logger.error('Error checking daily tokens:', error);
       // Return default state with next collection time
       return {
-        canCollect: true,
+        canCollect: false,
         nextCollectionTime: new Date(Date.now() + (24 * 60 * 60 * 1000)),
-        signature: signature
+        error: error.message
       };
     }
   }
