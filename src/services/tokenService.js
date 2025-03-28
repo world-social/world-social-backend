@@ -445,11 +445,11 @@ class TokenService {
         }
       }
 
-      let signature = "";
+      // let signature = "";
       const wallet = new ethers.Wallet(process.env.BACKEND_PRIVATE_KEY);
       // Define the message to be signed. You can customize this payload as needed.
       const message = `DailyClaim:${userId}:${Date.now()}`;
-      signature = await wallet.signMessage(message);
+      const signature = await wallet.signMessage(message);
 
       console.log("Signature: ", signature);
       
