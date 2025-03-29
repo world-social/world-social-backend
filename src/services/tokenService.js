@@ -3,8 +3,10 @@ const Redis = require('redis');
 const { WorldID } = require('@worldcoin/minikit-js');
 const { ethers } = require('ethers');
 const logger = require('../utils/logger');
+const redisClient = require('../configs/redis');
+const prisma = require('../configs/database');
 
-const prisma = new PrismaClient();
+const prismaClient = new PrismaClient();
 
 require('dotenv').config();
 
@@ -43,7 +45,7 @@ class TokenService {
   async addTokens(userId, amount, type, videoId = null) {
     try {
       // Start a transaction to ensure atomicity
-      const result = await prisma.$transaction(async (tx) => {
+      const result = await prismaClient.$transaction(async (tx) => {
         // Update user's token balance
         const updatedUser = await tx.user.update({
           where: { id: userId },
@@ -81,7 +83,7 @@ class TokenService {
   async deductTokens(userId, amount, type, videoId = null) {
     try {
       // Start a transaction to ensure atomicity
-      const result = await prisma.$transaction(async (tx) => {
+      const result = await prismaClient.$transaction(async (tx) => {
         // Check if user has enough tokens
         const user = await tx.user.findUnique({
           where: { id: userId }
@@ -127,7 +129,7 @@ class TokenService {
 
   async getTokenBalance(userId) {
     try {
-      const user = await prisma.user.findUnique({
+      const user = await prismaClient.user.findUnique({
         where: { id: userId },
         select: { tokenBalance: true }
       });
@@ -141,7 +143,7 @@ class TokenService {
 
   async getTransactionHistory(userId, limit = 10) {
     try {
-      const transactions = await prisma.transaction.findMany({
+      const transactions = await prismaClient.transaction.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' },
         take: limit,
@@ -169,7 +171,7 @@ class TokenService {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      const uniqueRewardedVideos = await prisma.transaction.findMany({
+      const uniqueRewardedVideos = await prismaClient.transaction.findMany({
         where: {
           userId,
           type: 'EARN',
@@ -192,7 +194,7 @@ class TokenService {
       
       if (tokenReward > 0) {
         // Start a transaction to ensure atomicity
-        const result = await prisma.$transaction(async (tx) => {
+        const result = await prismaClient.$transaction(async (tx) => {
           // Update user's token balance
           const updatedUser = await tx.user.update({
             where: { id: userId },
@@ -273,7 +275,7 @@ class TokenService {
   async earnTokens(userId, amount, videoId = null) {
     try {
       // Get user's World ID
-      const user = await prisma.user.findUnique({
+      const user = await prismaClient.user.findUnique({
         where: { id: userId }
       });
 
@@ -288,7 +290,7 @@ class TokenService {
       }
 
       // Record transaction in database
-      const transaction = await prisma.transaction.create({
+      const transaction = await prismaClient.transaction.create({
         data: {
           userId,
           videoId,
@@ -298,7 +300,7 @@ class TokenService {
       });
 
       // Update user's token balance
-      await prisma.user.update({
+      await prismaClient.user.update({
         where: { id: userId },
         data: {
           tokenBalance: {
@@ -309,7 +311,7 @@ class TokenService {
 
       // If video is associated, update video's token reward
       if (videoId) {
-        await prisma.video.update({
+        await prismaClient.video.update({
           where: { id: videoId },
           data: {
             tokenReward: {
@@ -330,7 +332,7 @@ class TokenService {
 
   async withdrawEarnings(userId) {
     try {
-      const user = await prisma.user.findUnique({
+      const user = await prismaClient.user.findUnique({
         where: { id: userId },
         include: {
           videos: true
@@ -355,7 +357,7 @@ class TokenService {
       }
 
       // Record withdrawal transaction
-      const transaction = await prisma.transaction.create({
+      const transaction = await prismaClient.transaction.create({
         data: {
           userId,
           amount: totalEarnings,
@@ -364,7 +366,7 @@ class TokenService {
       });
 
       // Update user's token balance
-      await prisma.user.update({
+      await prismaClient.user.update({
         where: { id: userId },
         data: {
           tokenBalance: {
@@ -391,7 +393,7 @@ class TokenService {
       }*/
 
       // If not in cache, get from database
-      const user = await prisma.user.findUnique({
+      const user = await prismaClient.user.findUnique({
         where: { id: userId }
       });
 
@@ -445,9 +447,16 @@ class TokenService {
         }
       }
 
-      const wallet = new ethers.Wallet(process.env.BACKEND_PRIVATE_KEY);
-      // Define the message to be signed. You can customize this payload as needed.
-      const message = `DailyClaim:${userId}:${Date.now()}`;
+      // Get private key from environment variable
+      const privateKey = process.env.BACKEND_PRIVATE_KEY;
+      if (!privateKey || !privateKey.startsWith('0x')) {
+        throw new Error('Invalid or missing private key');
+      }
+
+      // Create wallet instance and sign message
+      const timestamp = Date.now();
+      const message = `DailyClaim:${userId}:${timestamp}`;
+      const wallet = new ethers.Wallet(privateKey);
       const signature = await wallet.signMessage(message);
 
       logger.info("Generated signature for daily claim");
@@ -456,7 +465,8 @@ class TokenService {
       return {
         canCollect: true,
         nextCollectionTime: new Date(Date.now() + (24 * 60 * 60 * 1000)),
-        signature: signature
+        signature,
+        timestamp
       };
     } catch (error) {
       logger.error('Error checking daily tokens:', error);
@@ -470,7 +480,7 @@ class TokenService {
   }
 
   async claimDailyTokens(userId) {
-    const client = await prisma.$transaction(async (tx) => {
+    const client = await prismaClient.$transaction(async (tx) => {
       // Check if user can claim
       const lastClaim = await tx.dailyBonus.findFirst({
         where: { userId },

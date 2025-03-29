@@ -1,6 +1,7 @@
 const prisma = require('../configs/database');
 const storageClient = require('../configs/storage');
-const { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const tokenService = require('../services/tokenService');
 const gamificationService = require('../services/gamificationService');
 const logger = require('../utils/logger');
@@ -284,9 +285,13 @@ class ContentController {
       if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
         // Use S3
         try {
-          const stream = await storageClient.getObject(bucketName, video.thumbnailUrl);
+          const command = new GetObjectCommand({
+            Bucket: bucketName,
+            Key: video.thumbnailUrl
+          });
+          const response = await storageClient.send(command);
           res.setHeader('Content-Type', 'image/jpeg');
-          stream.pipe(res);
+          response.Body.pipe(res);
         } catch (error) {
           logger.error('Error getting thumbnail from S3:', error);
           res.status(404).json({
