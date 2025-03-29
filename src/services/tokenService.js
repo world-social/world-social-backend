@@ -1,5 +1,4 @@
 const { PrismaClient } = require('@prisma/client');
-const Redis = require('redis');
 const { WorldID } = require('@worldcoin/minikit-js');
 const { ethers } = require('ethers');
 const logger = require('../utils/logger');
@@ -9,37 +8,6 @@ const prisma = require('../configs/database');
 const prismaClient = new PrismaClient();
 
 require('dotenv').config();
-
-// Create Redis client with retry strategy
-const redisClient = Redis.createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379',
-  socket: {
-    reconnectStrategy: (retries) => {
-      if (retries > 10) {
-        return new Error('Too many retries');
-      }
-      return Math.min(retries * 100, 3000);
-    }
-  }
-});
-
-// Connect to Redis
-redisClient.connect().catch(err => {
-  logger.error('Redis connection error:', err);
-});
-
-// Handle Redis connection events
-redisClient.on('connect', () => {
-  logger.info('Redis client connected');
-});
-
-redisClient.on('error', (err) => {
-  logger.error('Redis client error:', err);
-});
-
-redisClient.on('reconnecting', () => {
-  logger.info('Redis client reconnecting...');
-});
 
 class TokenService {
   async addTokens(userId, amount, type, videoId = null) {

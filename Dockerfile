@@ -7,6 +7,10 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Set ffmpeg environment variables for optimization
+ENV FFMPEG_THREADS=4
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 # Create app directory
 WORKDIR /usr/src/app
 
@@ -32,4 +36,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8081/health || exit 1
 
 # Start the application with a wait for database
-CMD ["sh", "-c", "npx prisma migrate deploy && node src/app.js"] 
+CMD ["sh", "-c", "npx prisma migrate deploy && node --max-old-space-size=4096 src/app.js"] 
