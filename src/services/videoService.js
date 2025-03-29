@@ -233,10 +233,14 @@ class VideoService {
           data: {
             userId,
             title: file.originalname,
-            videoUrl: finalFileName,
+            url: finalFileName,
             thumbnailUrl: thumbnailName,
             duration: Math.min(duration, 30),
-            status: 'PROCESSED'
+            tags: [],
+            description: null,
+            views: 0,
+            likeCount: 0,
+            tokenReward: 0
           }
         });
 
@@ -401,12 +405,12 @@ class VideoService {
     try {
       const video = await this.getVideoMetadata(videoId);
       
-      if (!video || !video.videoUrl) {
+      if (!video || !video.url) {
         throw new Error('Video metadata not found or invalid');
       }
 
       // Get video stream from storage
-      const filePath = this.extractFilePath(video.videoUrl);
+      const filePath = this.extractFilePath(video.url);
       return await storageClient.getFile(this.bucketName, filePath);
     } catch (error) {
       logger.error('Error in getVideoStream:', error);
