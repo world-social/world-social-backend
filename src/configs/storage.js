@@ -1,19 +1,20 @@
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { Client: MinioClient } = require('minio');
 const logger = require('../utils/logger');
+const config = require('./video-service-config');
 
 class StorageAdapter {
   constructor() {
     if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
       this.client = new S3Client({
-        region: process.env.AWS_REGION,
+        region: config.region,
         credentials: {
           accessKeyId: process.env.AWS_ACCESS_KEY_ID,
           secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
         },
       });
       this.isS3 = true;
-      this.bucketName = process.env.AWS_BUCKET_NAME || 'socialworldworldcoin';
+      this.bucketName = config.bucketName;
     } else {
       this.client = new MinioClient({
         endPoint: process.env.MINIO_ENDPOINT,
@@ -23,7 +24,7 @@ class StorageAdapter {
         secretKey: process.env.MINIO_SECRET_KEY
       });
       this.isS3 = false;
-      this.bucketName = process.env.MINIO_BUCKET || 'worldsocial-videos';
+      this.bucketName = config.bucketName;
     }
   }
 

@@ -8,6 +8,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const logger = require('../utils/logger');
 const storageClient = require('../configs/storage');
+const config = require('../configs/video-service-config');
 
 // Initialize Redis client
 const redisClient = Redis.createClient({
@@ -24,9 +25,9 @@ const CACHE_DURATION = process.env.CACHE_DURATION || 3600; // Default to 1 hour 
 
 class VideoService {
   constructor() {
-    this.bucketName = process.env.AWS_BUCKET_NAME || process.env.MINIO_BUCKET || 'worldsocial-videos';
-    this.maxVideoSize = parseInt(process.env.MAX_VIDEO_SIZE) || 5242880; // 5MB default
-    this.videoRetentionDays = parseInt(process.env.VIDEO_RETENTION_DAYS) || 7;
+    this.bucketName = config.bucketName;
+    this.maxVideoSize = config.maxVideoSize;
+    this.videoRetentionDays = config.videoRetentionDays;
     this.initialize();
   }
 
@@ -63,16 +64,8 @@ class VideoService {
   }
 
   // Helper method to get full URL for a file
-  getFullUrl(filePath) {
-    if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
-      // For production, use the correct S3 bucket name
-      const bucketName = process.env.AWS_BUCKET_NAME || 'socialworldworldcoin';
-      return `https://${bucketName}.s3.${process.env.AWS_REGION || 'us-east-2'}.amazonaws.com/${filePath}`;
-    } else {
-      // For local development with MinIO
-      const bucketName = process.env.MINIO_BUCKET || 'worldsocial-videos';
-      return `http://${process.env.MINIO_ENDPOINT || 'localhost'}:${process.env.MINIO_PORT || '9000'}/${bucketName}/${filePath}`;
-    }
+  getFullUrl(objectKey) {
+    return `${config.getBaseUrl()}/${objectKey}`;
   }
 
   // Helper method to extract file path from URL
