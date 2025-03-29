@@ -200,34 +200,35 @@ class VideoService {
             .on('start', (commandLine) => {
               logger.info('Started thumbnail generation with command:', commandLine);
             })
-            .on('end', resolve)
+            .on('end', () => {
+              logger.info('Thumbnail generation completed');
+              resolve();
+            })
             .on('error', (err) => {
               logger.error('Error generating thumbnail:', err);
               reject(new Error(`Failed to generate thumbnail: ${err.message}`));
-            });
+            })
+            .run();
         });
+
+        // Verify thumbnail file exists and is readable
+        await fs.access(thumbnailPath);
+        const thumbnailStats = await fs.stat(thumbnailPath);
+        if (thumbnailStats.size === 0) {
+          throw new Error('Generated thumbnail is empty');
+        }
 
         // Upload thumbnail to storage
         const thumbnailBuffer = await fs.readFile(thumbnailPath);
         await storageClient.uploadFile(this.bucketName, thumbnailName, thumbnailBuffer);
-        uploadedFiles.push(thumbnailName);
-      } catch (error) {
-        logger.warn('Failed to generate/upload thumbnail:', error.message);
-        // Continue without thumbnail
-      }
+        logger.info(`Thumbnail uploaded: ${thumbnailName}`);
 
-      // Upload video to storage
-      try {
-        const fileBuffer = await fs.readFile(finalVideoPath);
-        await storageClient.uploadFile(this.bucketName, finalFileName, fileBuffer);
-        uploadedFiles.push(finalFileName);
-        logger.info(`Video uploaded successfully: ${finalFileName}`);
-      } catch (error) {
-        throw new Error(`Failed to upload video: ${error.message}`);
-      }
+        // Upload video to storage
+        const videoBuffer = await fs.readFile(finalVideoPath);
+        await storageClient.uploadFile(this.bucketName, finalFileName, videoBuffer);
+        logger.info(`Video uploaded: ${finalFileName}`);
 
-      // Create video record in database
-      try {
+        // Create video record in database
         createdVideo = await prisma.video.create({
           data: {
             id: contentId,
@@ -235,7 +236,7 @@ class VideoService {
             title: file.originalname,
             description: file.originalname,
             thumbnailUrl: thumbnailName,
-            duration: Math.min(Math.round(duration), 30),
+            duration: Math.min(duration, 30),
             views: 0,
             likeCount: 0,
             tags: [],
@@ -244,7 +245,8 @@ class VideoService {
         });
         logger.info(`Video record created: ${createdVideo.id}`);
       } catch (error) {
-        throw new Error(`Failed to create video record: ${error.message}`);
+        logger.error('Error processing video:', error);
+        throw error;
       }
 
       // Cache video metadata in Redis
@@ -267,15 +269,7 @@ class VideoService {
       );
 
       // Clean up temporary files
-      try {
-        if (finalVideoPath !== filePath) {
-          await fs.unlink(finalVideoPath);
-        }
-        await fs.unlink(filePath);
-        await fs.unlink(thumbnailPath);
-      } catch (error) {
-        logger.error('Error cleaning up temporary files:', error);
-      }
+      uploadedFiles = [finalVideoPath, thumbnailPath];
 
       return videoMetadata;
 
@@ -317,6 +311,15 @@ class VideoService {
       }
 
       throw new Error(`Error uploading video: ${error.message}`);
+    } finally {
+      // Cleanup temporary files
+      for (const file of uploadedFiles) {
+        try {
+          await fs.unlink(file);
+        } catch (error) {
+          logger.error(`Error deleting temporary file ${file}:`, error);
+        }
+      }
     }
   }
 
