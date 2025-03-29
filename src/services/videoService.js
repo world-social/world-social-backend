@@ -149,7 +149,6 @@ class VideoService {
                 '-movflags +faststart',
                 '-max_muxing_queue_size 9999'
               ])
-              .output(outputPath)
               .on('start', (commandLine) => {
                 logger.info('Started ffmpeg with command:', commandLine);
               })
@@ -164,7 +163,7 @@ class VideoService {
                 logger.error('Error during trimming:', err);
                 reject(new Error(`Failed to trim video: ${err.message}`));
               })
-              .run();
+              .save(outputPath);
           });
 
           // Verify the trimmed file
@@ -185,6 +184,7 @@ class VideoService {
       const thumbnailPath = path.join(tempDir, `thumb-${timestamp}.jpg`);
       
       try {
+        // Generate thumbnail
         await new Promise((resolve, reject) => {
           ffmpeg(finalVideoPath)
             .screenshots({
