@@ -65,37 +65,37 @@ class StorageAdapter {
     }
   }
 
-  async deleteFile(objectName) {
+  async deleteFile(bucketName, objectName) {
     try {
       if (this.isS3) {
         const command = new DeleteObjectCommand({
-          Bucket: this.bucketName,
+          Bucket: bucketName,
           Key: objectName,
         });
         await this.client.send(command);
       } else {
-        await this.client.removeObject(this.bucketName, objectName);
+        await this.client.removeObject(bucketName, objectName);
       }
-      logger.info(`Successfully deleted ${objectName} from ${this.bucketName}`);
+      logger.info(`Successfully deleted ${objectName} from ${bucketName}`);
     } catch (error) {
       logger.error(`Error deleting file: ${error.message}`);
       throw error;
     }
   }
 
-  async ensureBucketExists() {
+  async ensureBucketExists(bucketName) {
     try {
       if (this.isS3) {
         // For S3, we assume the bucket exists as it should be created manually
-        logger.info(`Using existing S3 bucket: ${this.bucketName}`);
+        logger.info(`Using existing S3 bucket: ${bucketName}`);
         return;
       } else {
-        const exists = await this.client.bucketExists(this.bucketName);
+        const exists = await this.client.bucketExists(bucketName);
         if (!exists) {
-          await this.client.makeBucket(this.bucketName);
-          logger.info(`Created MinIO bucket: ${this.bucketName}`);
+          await this.client.makeBucket(bucketName);
+          logger.info(`Created MinIO bucket: ${bucketName}`);
         } else {
-          logger.info(`Using existing MinIO bucket: ${this.bucketName}`);
+          logger.info(`Using existing MinIO bucket: ${bucketName}`);
         }
       }
     } catch (error) {

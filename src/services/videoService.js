@@ -208,7 +208,7 @@ class VideoService {
               logger.error('Error generating thumbnail:', err);
               reject(new Error(`Failed to generate thumbnail: ${err.message}`));
             })
-            .run();
+            .save(thumbnailPath);
         });
 
         // Verify thumbnail file exists and is readable
