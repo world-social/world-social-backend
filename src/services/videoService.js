@@ -231,86 +231,40 @@ class VideoService {
         // Create video record in database
         createdVideo = await prisma.video.create({
           data: {
-            id: contentId,
             userId,
             title: file.originalname,
-            description: file.originalname,
+            videoUrl: finalFileName,
             thumbnailUrl: thumbnailName,
             duration: Math.min(duration, 30),
-            views: 0,
-            likeCount: 0,
-            tags: [],
-            url: this.getFullUrl(finalFileName)
+            status: 'PROCESSED'
           }
         });
-        logger.info(`Video record created: ${createdVideo.id}`);
+
+        // Store in Redis for caching
+        await redisClient.set(
+          redisKey,
+          JSON.stringify({
+            videoUrl: this.getFullUrl(finalFileName),
+            thumbnailUrl: this.getFullUrl(thumbnailName),
+            duration: Math.min(duration, 30)
+          }),
+          'EX',
+          CACHE_DURATION
+        );
+
+        uploadedFiles = [finalVideoPath, thumbnailPath];
       } catch (error) {
         logger.error('Error processing video:', error);
         throw error;
       }
 
-      // Cache video metadata in Redis
-      const videoMetadata = {
-        id: createdVideo.id,
-        title: createdVideo.title,
-        description: createdVideo.description,
-        videoUrl: createdVideo.url,
-        thumbnailUrl: createdVideo.thumbnailUrl ? this.getFullUrl(createdVideo.thumbnailUrl) : null,
-        userId: createdVideo.userId,
-        duration: createdVideo.duration,
-        createdAt: createdVideo.createdAt
+      return {
+        video: createdVideo,
+        files: uploadedFiles
       };
-
-      await redisClient.set(
-        redisKey,
-        JSON.stringify(videoMetadata),
-        'EX',
-        CACHE_DURATION
-      );
-
-      // Clean up temporary files
-      uploadedFiles = [finalVideoPath, thumbnailPath];
-
-      return videoMetadata;
-
     } catch (error) {
       logger.error('Error in uploadVideo:', error);
-      
-      // Rollback: Delete uploaded files from storage
-      if (contentId && uploadedFiles.length > 0) {
-        try {
-          await Promise.all(uploadedFiles.map(fileName => 
-            storageClient.deleteFile(this.bucketName, fileName)
-          ));
-          logger.info('Successfully rolled back uploaded files');
-        } catch (rollbackError) {
-          logger.error('Error during rollback of uploaded files:', rollbackError);
-        }
-      }
-
-      // Rollback: Delete video record from database
-      if (createdVideo) {
-        try {
-          await prisma.video.delete({
-            where: { id: contentId }
-          });
-          logger.info('Successfully rolled back database record');
-        } catch (rollbackError) {
-          logger.error('Error during rollback of database record:', rollbackError);
-        }
-      }
-
-      // Rollback: Clear Redis cache if it was set
-      if (redisKey) {
-        try {
-          await redisClient.del(redisKey);
-          logger.info('Successfully cleared Redis cache');
-        } catch (rollbackError) {
-          logger.error('Error during rollback of Redis cache:', rollbackError);
-        }
-      }
-
-      throw new Error(`Error uploading video: ${error.message}`);
+      throw error;
     } finally {
       // Cleanup temporary files
       for (const file of uploadedFiles) {
