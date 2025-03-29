@@ -4,6 +4,7 @@ const { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aw
 const tokenService = require('../services/tokenService');
 const gamificationService = require('../services/gamificationService');
 const logger = require('../utils/logger');
+const config = require('../configs/video-service-config');
 
 class ContentController {
   async uploadVideo(req, res) {
@@ -20,9 +21,7 @@ class ContentController {
 
       // Upload to storage
       const videoKey = `videos/${userId}/${Date.now()}-${req.file.originalname}`;
-      const bucketName = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation' 
-        ? process.env.S3_BUCKET_VALIDATION 
-        : process.env.MINIO_BUCKET_NAME;
+      const bucketName = config.bucketName;
 
       if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
         // Use S3
@@ -142,9 +141,7 @@ class ContentController {
         });
       }
 
-      const bucketName = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation' 
-        ? process.env.S3_BUCKET_VALIDATION 
-        : process.env.MINIO_BUCKET_NAME;
+      const bucketName = config.bucketName;
 
       if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
         // Use S3
@@ -236,9 +233,7 @@ class ContentController {
         });
       }
 
-      const bucketName = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation' 
-        ? process.env.S3_BUCKET_VALIDATION 
-        : process.env.MINIO_BUCKET_NAME;
+      const bucketName = config.bucketName;
 
       if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
         // Use S3
