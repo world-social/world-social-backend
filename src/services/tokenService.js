@@ -394,7 +394,10 @@ class TokenService {
       // Create wallet instance and sign message
       const timestamp = Date.now();
       const message = `DailyClaim:${userId}:${timestamp}`;
-      const wallet = new ethers.Wallet(privateKey.replace('0x', ''));
+      
+      // Ensure private key is properly formatted
+      const formattedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
+      const wallet = new ethers.Wallet(formattedKey);
       const signature = await wallet.signMessage(message);
 
       logger.info("Generated signature for daily claim");
