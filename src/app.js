@@ -56,7 +56,7 @@ const corsOptions = {
     // Log the origin for debugging
     console.log('Request origin:', origin);
     
-    // Allow all Railway domains and localhost
+    // Allow all Railway domains, localhost, and ngrok domains
     const allowedOrigins = [
       'https://world-social-front-validation.up.railway.app',
       'https://world-social-front-production.up.railway.app',
@@ -65,7 +65,10 @@ const corsOptions = {
       'https://world-social-front.railway.internal'
     ];
     
-    if (allowedOrigins.includes(origin) || origin.endsWith('.railway.app')) {
+    if (allowedOrigins.includes(origin) || 
+        origin.endsWith('.railway.app') || 
+        origin.endsWith('.ngrok-free.app') ||
+        origin.endsWith('.ngrok.io')) {
       return callback(null, true);
     }
     
