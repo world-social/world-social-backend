@@ -47,17 +47,17 @@ class StorageAdapter {
     }
   }
 
-  async getFile(objectName) {
+  async getFile(bucketName, objectName) {
     try {
       if (this.isS3) {
         const command = new GetObjectCommand({
-          Bucket: this.bucketName,
+          Bucket: bucketName,
           Key: objectName,
         });
         const response = await this.client.send(command);
         return response.Body;
       } else {
-        return await this.client.getObject(this.bucketName, objectName);
+        return await this.client.getObject(bucketName, objectName);
       }
     } catch (error) {
       logger.error(`Error getting file: ${error.message}`);
