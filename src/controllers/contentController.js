@@ -280,30 +280,16 @@ class ContentController {
         });
       }
 
-      const bucketName = config.bucketName;
-
-      if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
-        // Use S3
-        try {
-          const command = new GetObjectCommand({
-            Bucket: bucketName,
-            Key: video.thumbnailUrl
-          });
-          const response = await storageClient.send(command);
-          res.setHeader('Content-Type', 'image/jpeg');
-          response.Body.pipe(res);
-        } catch (error) {
-          logger.error('Error getting thumbnail from S3:', error);
-          res.status(404).json({
-            status: 'error',
-            message: 'Thumbnail not found in storage'
-          });
-        }
-      } else {
-        // Use MinIO
-        const stream = await storageClient.getObject(bucketName, video.thumbnailUrl);
+      try {
+        const thumbnailStream = await storageClient.getFile(video.thumbnailUrl);
         res.setHeader('Content-Type', 'image/jpeg');
-        stream.pipe(res);
+        thumbnailStream.pipe(res);
+      } catch (error) {
+        logger.error('Error getting thumbnail from storage:', error);
+        res.status(404).json({
+          status: 'error',
+          message: 'Thumbnail not found in storage'
+        });
       }
     } catch (error) {
       logger.error('Error serving thumbnail:', error);

@@ -385,46 +385,16 @@ class TokenService {
 
   async checkDailyTokens(userId) {
     try {
-      // Check Redis connection
-      if (!redisClient.isOpen) {
-        try {
-          await redisClient.connect();
-        } catch (error) {
-          logger.error('Failed to connect to Redis:', error);
-          // Return default state with next collection time
-          return {
-            canCollect: true,
-            nextCollectionTime: new Date(Date.now() + (24 * 60 * 60 * 1000))
-          };
-        }
-      }
-
-      const lastClaimKey = `daily_claim:${userId}`;
-      const lastClaim = await redisClient.get(lastClaimKey);
-      
-      if (lastClaim) {
-        const lastClaimTime = parseInt(lastClaim);
-        const now = Date.now();
-        const hoursSinceLastClaim = (now - lastClaimTime) / (1000 * 60 * 60);
-        
-        if (hoursSinceLastClaim < 24) {
-          return {
-            canCollect: false,
-            nextCollectionTime: new Date(lastClaimTime + (24 * 60 * 60 * 1000))
-          };
-        }
-      }
-
-      // Get private key from environment variable
       const privateKey = process.env.BACKEND_PRIVATE_KEY;
-      if (!privateKey || !privateKey.startsWith('0x')) {
-        throw new Error('Invalid or missing private key');
+      
+      if (!privateKey) {
+        throw new Error('Private key not configured');
       }
 
       // Create wallet instance and sign message
       const timestamp = Date.now();
       const message = `DailyClaim:${userId}:${timestamp}`;
-      const wallet = new ethers.Wallet(privateKey);
+      const wallet = new ethers.Wallet(privateKey.replace('0x', ''));
       const signature = await wallet.signMessage(message);
 
       logger.info("Generated signature for daily claim");
