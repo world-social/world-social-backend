@@ -264,6 +264,46 @@ class ContentController {
       });
     }
   }
+
+  async getThumbnail(req, res) {
+    try {
+      const { videoId } = req.params;
+      const video = await prisma.video.findUnique({
+        where: { id: videoId }
+      });
+
+      if (!video || !video.thumbnailUrl) {
+        return res.status(404).json({
+          status: 'error',
+          message: 'Thumbnail not found'
+        });
+      }
+
+      const bucketName = config.bucketName;
+
+      if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
+        // Use S3
+        const command = new GetObjectCommand({
+          Bucket: bucketName,
+          Key: video.thumbnailUrl
+        });
+        const response = await storageClient.send(command);
+        res.setHeader('Content-Type', 'image/jpeg');
+        response.Body.pipe(res);
+      } else {
+        // Use MinIO
+        const stream = await storageClient.getObject(bucketName, video.thumbnailUrl);
+        res.setHeader('Content-Type', 'image/jpeg');
+        stream.pipe(res);
+      }
+    } catch (error) {
+      logger.error('Error serving thumbnail:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to serve thumbnail'
+      });
+    }
+  }
 }
 
 module.exports = new ContentController(); 

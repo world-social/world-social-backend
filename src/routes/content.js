@@ -943,4 +943,29 @@ router.post('/comments/:commentId/like', authenticateToken, async (req, res) => 
   }
 });
 
+/**
+ * @swagger
+ * /api/content/{videoId}/thumbnail:
+ *   get:
+ *     summary: Get video thumbnail
+ *     tags: [Content]
+ *     parameters:
+ *       - in: path
+ *         name: videoId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Thumbnail image
+ *         content:
+ *           image/jpeg:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       404:
+ *         description: Thumbnail not found
+ */
+router.get('/:videoId/thumbnail', contentController.getThumbnail);
+
 module.exports = router; 
