@@ -20,56 +20,29 @@ class ContentController {
       const { title, description } = req.body;
       const userId = req.user.id;
 
-      // Upload to storage
-      const videoKey = `videos/${userId}/${Date.now()}-${req.file.originalname}`;
-      const bucketName = config.bucketName;
-
-      if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'validation') {
-        // Use S3
-        await storageClient.send(new PutObjectCommand({
-          Bucket: bucketName,
-          Key: videoKey,
-          Body: req.file.buffer,
-          ContentType: req.file.mimetype
-        }));
-      } else {
-        // Use MinIO
-        await storageClient.putObject(
-          bucketName,
-          videoKey,
-          req.file.buffer,
-          req.file.size
-        );
-      }
-
-      // Create video record
-      const video = await prisma.video.create({
-        data: {
-          userId,
-          title,
-          description,
-          videoUrl: videoKey
-        }
-      });
+      // Use the video service to handle the upload
+      const videoService = require('../services/videoService');
+      const result = await videoService.uploadVideo(req.file, userId);
 
       // Award tokens for uploading
-      await tokenService.earnTokens(userId, 10, video.id);
+      await tokenService.earnTokens(userId, 10, result.video.id);
 
       // Check for achievements
       await gamificationService.checkAchievements(userId);
 
-      logger.info(`Video uploaded: ${video.id} by user ${userId}`);
+      logger.info(`Video uploaded: ${result.video.id} by user ${userId}`);
 
       res.status(201).json({
         status: 'success',
         data: {
           video: {
-            id: video.id,
-            title: video.title,
-            description: video.description,
-            videoUrl: video.videoUrl,
-            tokenReward: video.tokenReward,
-            createdAt: video.createdAt
+            id: result.video.id,
+            title: result.video.title,
+            description: result.video.description,
+            videoUrl: result.video.url,
+            thumbnailUrl: result.video.thumbnailUrl,
+            duration: result.video.duration,
+            createdAt: result.video.createdAt
           }
         }
       });
@@ -77,7 +50,7 @@ class ContentController {
       logger.error('Error uploading video:', error);
       res.status(500).json({
         status: 'error',
-        message: 'Failed to upload video'
+        message: error.message || 'Failed to upload video'
       });
     }
   }

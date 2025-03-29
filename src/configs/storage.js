@@ -28,19 +28,19 @@ class StorageAdapter {
     }
   }
 
-  async uploadFile(objectName, fileBuffer) {
+  async uploadFile(bucketName, objectName, fileBuffer) {
     try {
       if (this.isS3) {
         const command = new PutObjectCommand({
-          Bucket: this.bucketName,
+          Bucket: bucketName,
           Key: objectName,
           Body: fileBuffer,
         });
         await this.client.send(command);
       } else {
-        await this.client.putObject(this.bucketName, objectName, fileBuffer);
+        await this.client.putObject(bucketName, objectName, fileBuffer);
       }
-      logger.info(`Successfully uploaded ${objectName} to ${this.bucketName}`);
+      logger.info(`Successfully uploaded ${objectName} to ${bucketName}`);
     } catch (error) {
       logger.error(`Error uploading file: ${error.message}`);
       throw error;
