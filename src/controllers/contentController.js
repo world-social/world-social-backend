@@ -254,7 +254,7 @@ class ContentController {
       }
 
       try {
-        const thumbnailStream = await storageClient.getFile(video.thumbnailUrl);
+        const thumbnailStream = await storageClient.getFile(config.bucketName, video.thumbnailUrl);
         res.setHeader('Content-Type', 'image/jpeg');
         thumbnailStream.pipe(res);
       } catch (error) {
