@@ -156,19 +156,29 @@ router.post('/upload', authenticateToken, upload.single('video'), async (req, re
     
     // Transform the response to match the expected format
     const response = {
-      id: videoMetadata.id,
-      title: videoMetadata.title || req.file.originalname,
-      description: videoMetadata.description || req.file.originalname,
-      videoUrl: videoMetadata.videoUrl,
-      thumbnailUrl: videoMetadata.thumbnailUrl,
-      duration: videoMetadata.duration,
-      userId: videoMetadata.userId,
-      createdAt: videoMetadata.createdAt
+      id: videoMetadata.video.id,
+      title: videoMetadata.video.title,
+      description: description,
+      url: videoMetadata.video.url,
+      thumbnailUrl: videoMetadata.video.thumbnailUrl,
+      duration: videoMetadata.video.duration,
+      userId: videoMetadata.video.userId,
+      createdAt: videoMetadata.video.createdAt,
+      user: req.user,
+      stats: {
+        likes: 0,
+        comments: 0,
+        views: 0
+      }
     };
 
+    // Send success response with complete video data
     res.json({
       status: 'success',
-      data: { video: response }
+      data: { 
+        video: response,
+        message: 'Video uploaded successfully'
+      }
     });
   } catch (error) {
     console.error('Error uploading video:', error);
@@ -463,7 +473,7 @@ router.post('/:videoId/watch-time', authenticateToken, async (req, res) => {
     }
 
     // Reward tokens for watch time
-    const reward = await tokenService.rewardWatchTime(req.user.id, seconds, video.id);
+    const reward = await tokenService.rewardWatchTime(req.user.id, seconds, req.params.videoId);
 
     res.json({
       status: 'success',
