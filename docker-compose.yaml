@@ -26,6 +26,11 @@ services:
     volumes:
       - redis_data:/data
     container_name: world-social-backend-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   minio:
     image: minio/minio:latest

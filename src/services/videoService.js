@@ -1,4 +1,4 @@
-const Redis = require('redis');
+// const Redis = require('redis');
 const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const fs = require('fs').promises;
@@ -10,14 +10,19 @@ const logger = require('../utils/logger');
 const storageClient = require('../configs/storage');
 const config = require('../configs/video-service-config');
 
-// Initialize Redis client
-const redisClient = Redis.createClient({
-  url: process.env.REDIS_URL
-});
-
-// Connect to Redis
-redisClient.on('error', (err) => logger.error('Redis Client Error:', err));
-redisClient.on('connect', () => logger.info('Redis Client Connected'));
+// Mock Redis client
+const redisClient = {
+  isOpen: true,
+  connect: async () => {},
+  disconnect: async () => {},
+  get: async () => null,
+  set: async () => 'OK',
+  del: async () => 1,
+  on: () => {},
+  off: () => {},
+  quit: async () => {},
+  ping: async () => 'PONG'
+};
 
 const ffmpegPromise = promisify(ffmpeg);
 
@@ -34,24 +39,24 @@ class VideoService {
   async initialize() {
     try {
       await this.ensureBucket();
-      await this.connectRedis();
+      // await this.connectRedis();
     } catch (error) {
       logger.error('Error initializing VideoService:', error);
       throw error;
     }
   }
 
-  async connectRedis() {
-    try {
-    if (!redisClient.isOpen) {
-      await redisClient.connect();
-        logger.info('Redis connected successfully');
-      }
-    } catch (error) {
-      logger.error('Redis connection error:', error);
-      throw error;
-    }
-  }
+  // async connectRedis() {
+  //   try {
+  //     if (!redisClient.isOpen) {
+  //       await redisClient.connect();
+  //       logger.info('Redis connected successfully');
+  //     }
+  //   } catch (error) {
+  //     logger.error('Redis connection error:', error);
+  //     throw error;
+  //   }
+  // }
 
   async ensureBucket() {
     try {

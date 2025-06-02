@@ -1,12 +1,23 @@
 const { PrismaClient } = require('@prisma/client');
-const Redis = require('redis');
+// const Redis = require('redis');
 const logger = require('../utils/logger');
 const tokenService = require('./tokenService');
 
 const prisma = new PrismaClient();
-const redisClient = Redis.createClient({
-  url: process.env.REDIS_URL
-});
+
+// Mock Redis client
+const redisClient = {
+  isOpen: true,
+  connect: async () => {},
+  disconnect: async () => {},
+  get: async () => null,
+  set: async () => 'OK',
+  del: async () => 1,
+  on: () => {},
+  off: () => {},
+  quit: async () => {},
+  ping: async () => 'PONG'
+};
 
 class GamificationService {
   // Mission Management

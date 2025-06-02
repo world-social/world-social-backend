@@ -16,7 +16,6 @@ const os = require('os');
 const morgan = require('morgan');
 const { errorHandler } = require('./middleware/errorHandler');
 const { rateLimitConfig } = require('./configs/rateLimit');
-const { connectRedis } = require('./configs/redis');
 
 // Initialize Express app
 const app = express();
@@ -62,10 +61,13 @@ const corsOptions = {
       'https://world-social-front-production.up.railway.app',
       'http://localhost:3000',
       'http://localhost:3001',
-      'https://world-social-front.railway.internal'
+      'https://world-social-front.railway.internal',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3001'
     ];
     
-    if (allowedOrigins.includes(origin) || 
+    if (process.env.NODE_ENV === 'development' || 
+        allowedOrigins.includes(origin) || 
         origin.endsWith('.railway.app') || 
         origin.endsWith('.ngrok-free.app') ||
         origin.endsWith('.ngrok.io')) {
@@ -76,10 +78,11 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept', 'Origin', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept', 'Origin', 'X-Requested-With', 'Content-Length', 'Content-Range'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   optionsSuccessStatus: 204,
-  maxAge: 86400
+  maxAge: 86400,
+  preflightContinue: false
 };
 
 // Apply CORS middleware first

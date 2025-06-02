@@ -19,7 +19,8 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "node prisma/seed.js",
     "regenerate-thumbnails": "node scripts/regenerate-thumbnails.js",
-    "railway:regenerate-thumbnails": "node scripts/railway-regenerate-thumbnails.js"
+    "railway:regenerate-thumbnails": "node scripts/railway-regenerate-thumbnails.js",
+    "test:redis": "node scripts/test-redis.js"
   },
   "keywords": [],
   "author": "",
